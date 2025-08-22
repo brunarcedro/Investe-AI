@@ -26,9 +26,13 @@ Sistema híbrido que combina IA para personalizar recomendações de investiment
 
 ## 📂 Estrutura do Projeto
 ├── backend/          # API e lógica de negócio
+
 ├── frontend/         # App React Native
+
 ├── docs/            # Documentação do TCC
+
 └── data/            # Datasets e modelos
+
 
 ## 🎯 Status
 
