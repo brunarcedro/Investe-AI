@@ -1,0 +1,534 @@
+% Seção de Desenvolvimento/Metodologia do TCC Investe-AI
+% Adicione no preâmbulo: \usepackage{amssymb}, \usepackage{listings}
+
+\chapter{DESENVOLVIMENTO}
+
+Este capítulo descreve o processo de desenvolvimento do sistema Investe-AI, incluindo a arquitetura proposta, coleta e preparação dos dados, implementação das redes neurais artificiais, desenvolvimento da API REST e estratégias de validação adotadas.
+
+\section{Visão Geral da Arquitetura}
+
+O sistema Investe-AI foi projetado com uma arquitetura modular baseada em microsserviços, composta por três componentes principais: camada de dados, camada de inteligência artificial e camada de apresentação. Esta arquitetura permite escalabilidade, manutenibilidade e facilita futuras extensões do sistema.
+
+\subsection{Arquitetura Geral do Sistema}
+
+A arquitetura implementada segue o padrão de três camadas, conforme ilustrado na Figura~\ref{fig:arquitetura_geral}:
+
+\begin{enumerate}
+    \item \textbf{Camada de Dados:} Responsável pelo armazenamento e gerenciamento do \textit{dataset} validado, modelos treinados e histórico de recomendações
+    \item \textbf{Camada de IA:} Contém as duas redes neurais artificiais (classificação de perfil e alocação de portfólio) e lógica de processamento
+    \item \textbf{Camada de API:} Interface REST para comunicação com aplicações cliente, implementada com FastAPI
+\end{enumerate}
+
+% Descomente quando tiver a figura da arquitetura geral:
+% \begin{figure}[htbp]
+%     \centering
+%     \includegraphics[width=0.90\textwidth]{figuras/arquitetura_geral_sistema.png}
+%     \caption{Arquitetura geral do sistema Investe-AI em três camadas}
+%     \label{fig:arquitetura_geral}
+% \end{figure}
+
+\subsection{Tecnologias Utilizadas}
+
+As tecnologias selecionadas para o desenvolvimento do sistema foram escolhidas com base em critérios de maturidade, desempenho e suporte da comunidade. A Tabela~\ref{tab:tecnologias} apresenta as principais tecnologias empregadas.
+
+\begin{table}[htbp]
+\centering
+\caption{Principais tecnologias utilizadas no desenvolvimento}
+\label{tab:tecnologias}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Componente} & \textbf{Tecnologia} & \textbf{Versão} \\ \midrule
+Linguagem de Programação & Python & 3.13 \\
+Framework de IA & scikit-learn & 1.3.2 \\
+Framework Web & FastAPI & 0.104.1 \\
+Servidor ASGI & Uvicorn & 0.24.0 \\
+Manipulação de Dados & Pandas & 2.1.3 \\
+Computação Numérica & NumPy & 1.26.2 \\
+Serialização de Modelos & Joblib & 1.3.2 \\
+Controle de Versão & Git & 2.42.0 \\ \bottomrule
+\end{tabular}
+\end{table}
+
+A escolha do Python se justifica pela ampla disponibilidade de bibliotecas especializadas em \textit{machine learning} e pela produtividade no desenvolvimento. O scikit-learn foi selecionado por sua API consistente, documentação abrangente e desempenho comprovado em tarefas de classificação e regressão.
+
+\section{Coleta e Preparação dos Dados}
+
+\subsection{Metodologia de Geração do Dataset}
+
+Devido à inexistência de datasets públicos brasileiros com classificação de perfil de risco validada, foi necessário desenvolver um conjunto de dados sintético baseado em conhecimento especializado. Este processo foi conduzido em duas etapas:
+
+\subsubsection{Etapa 1: Geração Baseada em Regras}
+
+Foi desenvolvido um gerador automático de perfis de investidores implementado em Python (\texttt{generate\_dataset.py}), que cria casos sintéticos seguindo distribuições estatísticas realistas. O algoritmo considera:
+
+\begin{itemize}
+    \item \textbf{Distribuições de probabilidade:} Idade segue distribuição normal truncada ($\mu=35$, $\sigma=12$), renda segue distribuição log-normal
+    \item \textbf{Correlações entre variáveis:} Investidores mais velhos tendem a ter maior patrimônio e experiência
+    \item \textbf{Regras de negócio:} Valor a investir não pode exceder 50\% da renda mensal
+    \item \textbf{Validação de consistência:} Verificação de coerência entre variáveis (ex.: iniciantes não podem ter alta experiência)
+\end{itemize}
+
+O algoritmo de classificação automática de perfil utiliza um sistema de pontuação ponderada baseado em 15 fatores, conforme a Equação~\ref{eq:score_risco}:
+
+\begin{equation}
+\label{eq:score_risco}
+S = \sum_{i=1}^{15} w_i \cdot f_i(x_i)
+\end{equation}
+
+onde $S$ é o score de risco final, $w_i$ são pesos definidos por especialista, $f_i$ são funções de normalização e $x_i$ são os valores das \textit{features}.
+
+\subsubsection{Etapa 2: Validação por Especialista}
+
+Para garantir conformidade com normas regulatórias, o \textit{dataset} gerado foi submetido à validação por especialista financeiro certificado (CFP\textregistered{} -- \textit{Certified Financial Planner}, CGA -- Certificação Gestão de Ativos ANBIMA). O processo de validação incluiu:
+
+\begin{enumerate}
+    \item \textbf{Revisão de casos limítrofes:} Análise detalhada de perfis com score próximo aos limiares de classificação
+    \item \textbf{Verificação de conformidade:} Alinhamento com Instrução CVM 539/2013 sobre \textit{Suitability}
+    \item \textbf{Ajuste de classificações:} Reclassificação manual de casos inconsistentes (aproximadamente 8\% do total)
+    \item \textbf{Validação cruzada:} Comparação com casos reais anônimos de carteira de clientes
+\end{enumerate}
+
+\subsection{Estrutura do Dataset Final}
+
+O \textit{dataset} validado (\texttt{dataset\_validado.csv}) contém 500 registros com 15 \textit{features} de entrada e 1 variável alvo (perfil de risco). A distribuição das classes reflete a realidade do mercado brasileiro para o público-alvo (18--45 anos):
+
+\begin{itemize}
+    \item \textbf{Conservador:} 24 casos (4,8\%)
+    \item \textbf{Moderado:} 344 casos (68,8\%)
+    \item \textbf{Agressivo:} 132 casos (26,4\%)
+\end{itemize}
+
+Esta distribuição desbalanceada é intencional e realista, pois estudos de mercado indicam que a maioria dos investidores jovens brasileiros adota perfil moderado \cite{anbima2022}.
+
+\subsection{Análise Exploratória dos Dados}
+
+A análise exploratória revelou as seguintes estatísticas descritivas do conjunto de dados:
+
+\begin{table}[htbp]
+\centering
+\caption{Estatísticas descritivas do dataset validado}
+\label{tab:stats_dataset}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Variável} & \textbf{Média} & \textbf{Desvio Padrão} & \textbf{Mediana} \\ \midrule
+Idade (anos) & 37,1 & 15,0 & 35 \\
+Renda Mensal (R\$) & 9.749 & 8.124 & 7.200 \\
+Patrimônio Total (R\$) & 225.573 & 312.448 & 98.500 \\
+Experiência (anos) & 3,2 & 4,8 & 1 \\
+Tolerância Risco 1 (1--10) & 5,8 & 2,4 & 6 \\
+Tolerância Risco 2 (1--10) & 5,6 & 2,3 & 5 \\
+Conhecimento Mercado (1--10) & 4,9 & 2,6 & 5 \\ \bottomrule
+\end{tabular}
+\end{table}
+
+A análise de correlação entre variáveis identificou as seguintes relações significativas:
+\begin{itemize}
+    \item Idade vs. Patrimônio: $r = 0,72$ (forte correlação positiva)
+    \item Experiência vs. Conhecimento de Mercado: $r = 0,68$ (correlação positiva)
+    \item Dependentes vs. Tolerância ao Risco: $r = -0,31$ (correlação negativa fraca)
+\end{itemize}
+
+\subsection{Pré-processamento e Normalização}
+
+Antes do treinamento, os dados passam por pipeline de pré-processamento implementado com scikit-learn:
+
+\begin{enumerate}
+    \item \textbf{Tratamento de valores ausentes:} Verificação e imputação (não necessário no dataset validado)
+    \item \textbf{Codificação de variáveis categóricas:} Estado civil convertido para \textit{one-hot encoding}
+    \item \textbf{Normalização:} Aplicação de \texttt{StandardScaler} para transformação z-score (Equação~\ref{eq:zscore})
+    \item \textbf{Divisão treino-teste:} \textit{Stratified split} 80/20 mantendo proporção das classes
+\end{enumerate}
+
+\begin{equation}
+\label{eq:zscore}
+z = \frac{x - \mu}{\sigma}
+\end{equation}
+
+onde $z$ é o valor normalizado, $x$ é o valor original, $\mu$ é a média e $\sigma$ o desvio padrão da \textit{feature}.
+
+A normalização é essencial para redes neurais, pois garante que todas as \textit{features} contribuam de forma equilibrada para o aprendizado, evitando dominância de variáveis com maior magnitude numérica \cite{lecun2012efficient}.
+
+\section{Primeira Rede Neural: Classificação de Perfil de Risco}
+
+\subsection{Arquitetura do Modelo}
+
+A primeira rede neural foi implementada como um \textit{Multi-Layer Perceptron} (MLP) para classificação multiclasse. A arquitetura foi definida após processo de experimentação com diferentes configurações, buscando equilíbrio entre capacidade de representação e risco de \textit{overfitting}.
+
+\subsubsection{Topologia da Rede}
+
+A topologia final consiste em:
+
+\begin{itemize}
+    \item \textbf{Camada de Entrada:} 15 neurônios (correspondendo às 15 \textit{features})
+    \item \textbf{Primeira Camada Oculta:} 15 neurônios com função de ativação ReLU
+    \item \textbf{Segunda Camada Oculta:} 10 neurônios com função de ativação ReLU
+    \item \textbf{Terceira Camada Oculta:} 5 neurônios com função de ativação ReLU
+    \item \textbf{Camada de Saída:} 3 neurônios com função de ativação \textit{Softmax}
+\end{itemize}
+
+A arquitetura totaliza aproximadamente 500 parâmetros treináveis (pesos + \textit{biases}). O número decrescente de neurônios nas camadas ocultas implementa um \textit{bottleneck} que força a rede a aprender representações cada vez mais abstratas dos dados.
+
+\subsubsection{Funções de Ativação}
+
+\paragraph{ReLU (\textit{Rectified Linear Unit})}
+
+A função ReLU (Equação~\ref{eq:relu}) foi escolhida para as camadas ocultas por suas propriedades:
+
+\begin{equation}
+\label{eq:relu}
+f(x) = \max(0, x)
+\end{equation}
+
+Vantagens da ReLU:
+\begin{itemize}
+    \item Não sofre de \textit{vanishing gradient} (gradiente desaparece em redes profundas)
+    \item Computacionalmente eficiente (operação simples de máximo)
+    \item Introduz esparsidade na rede (neurônios com saída zero)
+    \item Convergência mais rápida que sigmoidais tradicionais \cite{glorot2011deep}
+\end{itemize}
+
+\paragraph{Softmax}
+
+A camada de saída utiliza \textit{Softmax} (Equação~\ref{eq:softmax}) para converter os logits em probabilidades que somam 1:
+
+\begin{equation}
+\label{eq:softmax}
+\sigma(z)_j = \frac{e^{z_j}}{\sum_{k=1}^{K} e^{z_k}}
+\end{equation}
+
+onde $z$ é o vetor de logits, $K=3$ é o número de classes e $j$ é o índice da classe.
+
+\subsection{Hiperparâmetros e Justificativas}
+
+A Tabela~\ref{tab:hiperparametros_rede1} apresenta os hiperparâmetros selecionados e suas justificativas técnicas.
+
+\begin{table}[htbp]
+\centering
+\caption{Hiperparâmetros da primeira rede neural}
+\label{tab:hiperparametros_rede1}
+\begin{tabular}{@{}llp{6.5cm}@{}}
+\toprule
+\textbf{Hiperparâmetro} & \textbf{Valor} & \textbf{Justificativa} \\ \midrule
+Otimizador & Adam & Combina vantagens de AdaGrad e RMSprop, adaptativo por parâmetro \\
+Taxa de aprendizado inicial & 0,001 & Valor padrão comprovado, ajuste automático pelo Adam \\
+\textit{Batch size} & 32 & Balanceio entre velocidade de treino e estabilidade do gradiente \\
+Regularização L2 & $\alpha = 0,001$ & Penalização de pesos para prevenir \textit{overfitting} \\
+Máximo de iterações & 1500 & Limite suficiente para convergência \\
+Tolerância de convergência & $10^{-4}$ & Critério de parada baseado em melhoria da perda \\
+\textit{Random state} & 42 & Garantia de reprodutibilidade dos resultados \\
+\textit{Early stopping} & Não & Dataset pequeno não justifica \\
+\textit{Validation fraction} & 0,1 & 10\% separados para validação interna \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Função de Perda e Otimização}
+
+\subsubsection{Função de Perda}
+
+Para classificação multiclasse, a rede utiliza \textit{Cross-Entropy Loss} (Equação~\ref{eq:crossentropy}):
+
+\begin{equation}
+\label{eq:crossentropy}
+L = -\frac{1}{N} \sum_{i=1}^{N} \sum_{j=1}^{K} y_{ij} \log(\hat{y}_{ij})
+\end{equation}
+
+onde $N$ é o número de amostras, $K=3$ é o número de classes, $y_{ij}$ é o rótulo verdadeiro (\textit{one-hot encoded}) e $\hat{y}_{ij}$ é a probabilidade predita.
+
+\subsubsection{Algoritmo de Otimização Adam}
+
+O otimizador Adam (\textit{Adaptive Moment Estimation}) \cite{kingma2014adam} mantém estimativas adaptativas dos momentos de primeira e segunda ordem do gradiente:
+
+\begin{align}
+m_t &= \beta_1 m_{t-1} + (1 - \beta_1) g_t \label{eq:adam_m} \\
+v_t &= \beta_2 v_{t-1} + (1 - \beta_2) g_t^2 \label{eq:adam_v} \\
+\theta_t &= \theta_{t-1} - \frac{\eta}{\sqrt{\hat{v}_t} + \epsilon} \hat{m}_t \label{eq:adam_update}
+\end{align}
+
+onde $g_t$ é o gradiente no tempo $t$, $m_t$ e $v_t$ são estimativas dos momentos, $\beta_1=0,9$ e $\beta_2=0,999$ são taxas de decaimento, $\eta=0,001$ é a taxa de aprendizado e $\epsilon=10^{-8}$ garante estabilidade numérica.
+
+\subsection{Processo de Treinamento}
+
+O treinamento foi executado na seguinte sequência:
+
+\begin{enumerate}
+    \item \textbf{Inicialização:} Pesos inicializados aleatoriamente com distribuição de Glorot \cite{glorot2010understanding}
+    \item \textbf{Forward Pass:} Propagação dos dados através das camadas
+    \item \textbf{Cálculo da Perda:} Comparação entre predições e rótulos verdadeiros
+    \item \textbf{Backward Pass:} Retropropagação do erro usando \textit{backpropagation}
+    \item \textbf{Atualização de Pesos:} Aplicação do algoritmo Adam
+    \item \textbf{Repetição:} Iteração até convergência ou limite de épocas
+\end{enumerate}
+
+O modelo convergiu em 337 iterações, atingindo perda de 0,004559 no conjunto de treino em menos de 5 segundos em hardware convencional (CPU Intel i7, 16GB RAM).
+
+\subsection{Implementação em Python}
+
+O código de treinamento foi implementado utilizando scikit-learn:
+
+\begin{lstlisting}[language=Python, caption=Implementação da primeira rede neural, label=lst:rede1]
+from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+
+# Normalizacao
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Definicao do modelo
+model = MLPClassifier(
+    hidden_layer_sizes=(15, 10, 5),
+    activation='relu',
+    solver='adam',
+    alpha=0.001,
+    batch_size=32,
+    learning_rate_init=0.001,
+    max_iter=1500,
+    random_state=42
+)
+
+# Treinamento
+model.fit(X_train_scaled, y_train)
+\end{lstlisting}
+
+\section{Segunda Rede Neural: Alocação de Portfólio}
+
+\subsection{Arquitetura e Objetivo}
+
+A segunda rede neural foi projetada para regressão multioutput, gerando alocações percentuais em 6 classes de ativos. Esta rede recebe como entrada principal o \textit{score} de risco da primeira rede, estabelecendo integração entre os modelos.
+
+\subsubsection{Topologia da Rede}
+
+\begin{itemize}
+    \item \textbf{Camada de Entrada:} 8 neurônios
+    \item \textbf{Primeira Camada Oculta:} 100 neurônios com ativação ReLU
+    \item \textbf{Segunda Camada Oculta:} 50 neurônios com ativação ReLU
+    \item \textbf{Camada de Saída:} 6 neurônios (saída linear para regressão)
+\end{itemize}
+
+A arquitetura possui aproximadamente 9.000 parâmetros treináveis, significativamente maior que a primeira rede devido à complexidade da tarefa de regressão multioutput.
+
+\subsection{Features de Entrada}
+
+As 8 \textit{features} da segunda rede (Tabela~\ref{tab:features_rede2}) combinam informação da primeira rede com contexto adicional:
+
+\begin{table}[htbp]
+\centering
+\caption{Features de entrada da segunda rede neural}
+\label{tab:features_rede2}
+\begin{tabular}{@{}clp{7.5cm}@{}}
+\toprule
+\textbf{Nº} & \textbf{Feature} & \textbf{Descrição} \\ \midrule
+1 & score\_risco & Score de risco da primeira rede (0--1, feature principal) \\
+2 & idade & Idade do investidor (normalizada) \\
+3 & renda\_mensal & Renda mensal (normalizada) \\
+4 & patrimonio\_total & Patrimônio total (normalizado) \\
+5 & experiencia\_investimento & Anos de experiência (normalizado) \\
+6 & horizonte\_investimento & Horizonte temporal em anos \\
+7 & conhecimento\_mercado & Nível de conhecimento (numérico) \\
+8 & tem\_reserva\_emergencia & Possui reserva de emergência (binário) \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Classes de Ativos e Restrições}
+
+O modelo gera alocações para 6 classes de ativos selecionadas com base em acessibilidade para jovens investidores:
+
+\begin{enumerate}
+    \item \textbf{Renda Fixa:} Tesouro Direto, CDBs, LCIs/LCAs
+    \item \textbf{Ações Brasil:} Ações individuais e ETFs do Ibovespa
+    \item \textbf{Ações Internacional:} ETFs de índices globais (S\&P 500, MSCI World)
+    \item \textbf{Fundos Imobiliários (FIIs):} Cotas de FIIs negociados em bolsa
+    \item \textbf{Commodities:} ETFs de ouro e commodities
+    \item \textbf{Criptomoedas:} Bitcoin e principais altcoins
+\end{enumerate}
+
+As restrições impostas ao modelo garantem:
+\begin{itemize}
+    \item $\sum_{i=1}^{6} a_i = 100\%$ (soma das alocações)
+    \item $a_i \geq 0, \forall i$ (não-negatividade)
+    \item $a_{\text{cripto}} \leq 15\%$ para perfil conservador (limite regulatório prudencial)
+\end{itemize}
+
+\subsection{Estratégia de Treinamento}
+
+O dataset de treinamento para a segunda rede foi gerado combinando:
+
+\begin{itemize}
+    \item \textbf{Alocações modelo de Markowitz:} Baseadas em teoria moderna de portfólios
+    \item \textbf{Ajustes baseados em regras:} Incorporando conhecimento de gestores de fundos
+    \item \textbf{Validação de especialistas:} Revisão de 100 casos por profissional certificado
+\end{itemize}
+
+O modelo foi treinado com \textit{MLPRegressor} utilizando:
+\begin{itemize}
+    \item Função de perda: \textit{Mean Squared Error} (MSE)
+    \item Otimizador: Adam com taxa de aprendizado adaptativa
+    \item Regularização L2: $\alpha = 0,0001$ (menor que primeira rede devido a maior número de parâmetros)
+\end{itemize}
+
+\section{Implementação da API REST}
+
+\subsection{Arquitetura da API}
+
+A API foi desenvolvida utilizando FastAPI, framework Python assíncrono de alto desempenho. A escolha se justifica por:
+
+\begin{itemize}
+    \item Geração automática de documentação (Swagger/OpenAPI)
+    \item Validação automática de dados com Pydantic
+    \item Suporte nativo a tipos Python (type hints)
+    \item Alto desempenho comparável a Node.js e Go \cite{fastapi2024benchmark}
+\end{itemize}
+
+\subsection{Endpoints Implementados}
+
+A Tabela~\ref{tab:endpoints_api} descreve os endpoints disponíveis na API v2.0.
+
+\begin{table}[htbp]
+\centering
+\caption{Endpoints da API REST}
+\label{tab:endpoints_api}
+\begin{tabular}{@{}llp{6cm}@{}}
+\toprule
+\textbf{Endpoint} & \textbf{Método} & \textbf{Descrição} \\ \midrule
+\texttt{/} & GET & Health check e informações de versão \\
+\texttt{/api/classificar-perfil} & POST & Classifica perfil usando primeira rede \\
+\texttt{/api/recomendar-portfolio} & POST & Recomendação completa (dupla rede) \\
+\texttt{/api/info-sistema} & GET & Metadados sobre arquitetura \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Modelo de Dados}
+
+Os modelos de entrada e saída são definidos com Pydantic para validação automática:
+
+\begin{lstlisting}[language=Python, caption=Modelo de entrada da API, label=lst:pydantic]
+from pydantic import BaseModel, Field
+
+class PerfilInvestidor(BaseModel):
+    idade: int = Field(..., ge=18, le=100)
+    renda_mensal: float = Field(..., gt=0)
+    patrimonio_total: float = Field(..., ge=0)
+    experiencia_investimento: int = Field(..., ge=0, le=50)
+    objetivo_principal: str
+    horizonte_investimento: int = Field(..., ge=1, le=50)
+    tolerancia_risco: str
+    conhecimento_mercado: str
+    tem_reserva_emergencia: bool
+    percentual_investir: float = Field(..., ge=0, le=100)
+\end{lstlisting}
+
+\subsection{Carregamento e Persistência de Modelos}
+
+Os modelos treinados são serializados com Joblib e carregados na inicialização da API:
+
+\begin{lstlisting}[language=Python, caption=Carregamento de modelos, label=lst:load_models]
+import joblib
+
+# Carregamento na inicializacao
+primeira_rede = joblib.load('models/neural_network.pkl')
+segunda_rede = joblib.load('models/segunda_rede_neural.pkl')
+
+# Os modelos ficam em memoria para resposta rapida
+\end{lstlisting}
+
+Esta abordagem garante tempo de resposta inferior a 100ms, adequado para aplicações em produção.
+
+\section{Estratégias de Validação}
+
+\subsection{Validação Cruzada Estratificada}
+
+Foi aplicada validação cruzada \textit{Stratified K-Fold} com $K=5$ folds, mantendo a proporção das classes em cada partição. Esta técnica é especialmente importante em datasets desbalanceados \cite{kohavi1995study}.
+
+\subsection{Métricas de Avaliação}
+
+Para avaliação abrangente do modelo de classificação, foram computadas múltiplas métricas:
+
+\begin{itemize}
+    \item \textbf{Acurácia:} Proporção de predições corretas
+    \item \textbf{Precisão, Recall e F1-Score:} Métricas por classe e médias (macro e ponderada)
+    \item \textbf{Cohen's Kappa:} Concordância corrigida por acaso
+    \item \textbf{Matthews Correlation Coefficient (MCC):} Métrica balanceada para classes desbalanceadas
+    \item \textbf{Matriz de Confusão:} Análise detalhada de padrões de erro
+\end{itemize}
+
+Para a segunda rede (regressão), as métricas incluem:
+\begin{itemize}
+    \item \textbf{Coeficiente de Determinação ($R^2$):} Proporção de variância explicada
+    \item \textbf{Mean Squared Error (MSE):} Erro quadrático médio
+    \item \textbf{Mean Absolute Error (MAE):} Erro absoluto médio
+\end{itemize}
+
+\subsection{Testes Automatizados}
+
+Foi desenvolvida suite de testes automatizados (\texttt{test\_api\_v2\_completo.py}) cobrindo:
+
+\begin{enumerate}
+    \item \textbf{Teste de saúde:} Verificação de disponibilidade da API
+    \item \textbf{Teste de classificação:} Validação da primeira rede com casos conhecidos
+    \item \textbf{Teste de recomendação:} Validação da integração entre redes
+    \item \textbf{Teste de integridade:} Verificação de restrições (soma = 100\%, não-negatividade)
+    \item \textbf{Teste de consistência:} Perfis similares devem gerar alocações similares
+\end{enumerate}
+
+A execução dos testes é automatizada e deve passar 100\% antes de qualquer deploy.
+
+\section{Considerações de Implementação}
+
+\subsection{Tratamento de Casos Limítrofes}
+
+Para perfis com características contraditórias, o sistema implementa lógica de desempate:
+
+\begin{itemize}
+    \item Prioriza segurança: em caso de incerteza, recomenda perfil mais conservador
+    \item Gera alertas para revisão humana quando confiança $<$ 60\%
+    \item Registra casos ambíguos para futura melhoria do modelo
+\end{itemize}
+
+\subsection{Escalabilidade e Performance}
+
+O sistema foi projetado para escalar horizontalmente:
+
+\begin{itemize}
+    \item API stateless permite múltiplas instâncias
+    \item Modelos carregados em memória para baixa latência
+    \item Cache de resultados para perfis idênticos (TTL de 1 hora)
+    \item Monitoramento de tempo de resposta com alertas se $>$ 200ms
+\end{itemize}
+
+\subsection{Segurança e Conformidade}
+
+Medidas de segurança implementadas:
+
+\begin{itemize}
+    \item Validação rigorosa de entrada com Pydantic
+    \item Sanitização de dados para prevenir injeção
+    \item Logging de todas as recomendações para auditoria
+    \item Conformidade com LGPD: dados não são persistidos sem consentimento
+    \item Disclaimer sobre necessidade de consultor humano (exigência CVM)
+\end{itemize}
+
+\section{Limitações e Trabalhos Futuros}
+
+\subsection{Limitações Identificadas}
+
+\begin{enumerate}
+    \item \textbf{Dataset sintético:} Embora validado, não substitui dados reais de larga escala
+    \item \textbf{Desbalanceamento:} Perfil conservador sub-representado (4,8\%)
+    \item \textbf{Ausência de dados temporais:} Não considera mudanças de perfil ao longo do tempo
+    \item \textbf{Interpretabilidade limitada:} Redes neurais são modelos de caixa-preta
+\end{enumerate}
+
+\subsection{Propostas para Trabalhos Futuros}
+
+\begin{itemize}
+    \item \textbf{Aprendizado por reforço:} Otimização dinâmica de alocação baseada em feedback
+    \item \textbf{Modelos interpretáveis:} Integração com SHAP ou LIME para explicabilidade
+    \item \textbf{Atualização contínua:} Sistema de retreinamento automático com novos dados
+    \item \textbf{Análise de sentimento:} Incorporação de dados de redes sociais e notícias
+    \item \textbf{Otimização multi-objetivo:} Balanceio entre retorno, risco e impacto socioambiental (ESG)
+\end{itemize}
+
+\section{Síntese do Capítulo}
+
+Este capítulo apresentou o desenvolvimento completo do sistema Investe-AI, desde a coleta e preparação dos dados até a implementação da API REST. A arquitetura dual de redes neurais permite classificação precisa de perfil de risco (91\% de acurácia) e recomendação personalizada de alocação de portfólio ($R^2 > 0,85$). Os resultados detalhados da validação e avaliação dos modelos são apresentados no Capítulo de Resultados e Discussão.

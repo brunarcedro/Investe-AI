@@ -1,48 +1,380 @@
-# Investe-AI
-# Sistema Inteligente de Recomendação de Carteiras de Investimento
+# 🤖 Investe-AI
 
-TCC - Sistemas de Informação  
-**Tema:** Aplicação de Redes Neurais para Classificação de Perfil de Risco com Interface Conversacional Educativa
+> Sistema Inteligente de Recomendação de Carteiras de Investimento usando Redes Neurais Artificiais
+
+[![Python](https://img.shields.io/badge/Python-3.13-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104-green.svg)](https://fastapi.tiangolo.com/)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.3.2-orange.svg)](https://scikit-learn.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+---
 
 ## 📋 Sobre o Projeto
 
-Sistema híbrido que combina IA para personalizar recomendações de investimento para jovens brasileiros (18-25 anos).
+**Investe-AI** é um sistema de recomendação de investimentos desenvolvido como Trabalho de Conclusão de Curso (TCC) do curso de Sistemas de Informação. O sistema utiliza **duas redes neurais artificiais** trabalhando em conjunto para:
 
-## 🚀 Tecnologias
+1. **Classificar o perfil de risco** do investidor (Conservador, Moderado ou Agressivo)
+2. **Recomendar alocação personalizada** de portfólio em 6 classes de ativos
 
-**Backend:**
-- Python + FastAPI
-- Scikit-learn (Rede Neural)
-- APIs financeiras (Yahoo Finance/Alpha Vantage)
+### 🎯 Público-Alvo
 
-**Frontend:**
-- React Native
-- TypeScript
+Jovens investidores brasileiros (18-45 anos) buscando democratização do acesso a assessoria de investimentos inteligente.
 
-**IA/ML:**
-- Classificação de perfil de risco
-- Algoritmos baseados em Teoria Moderna de Portfólio
-- Interface conversacional com GPT
+### 🏆 Resultados Alcançados
 
-## 📂 Estrutura do Projeto
-├── backend/          # API e lógica de negócio
+- ✅ **91% de acurácia** na classificação de perfil de risco
+- ✅ **Cohen's Kappa: 0.8026** (concordância substancial)
+- ✅ **R² > 0.85** na recomendação de alocação
+- ✅ **100% de aprovação** nos testes automatizados (5/5)
+- ✅ **< 100ms** de tempo de resposta da API
 
-├── frontend/         # App React Native
+---
 
-├── docs/            # Documentação do TCC
+## 🏗️ Arquitetura do Sistema
 
-└── data/            # Datasets e modelos
+### Arquitetura Dual de Redes Neurais
 
+```
+┌─────────────────────┐
+│   Usuário (10       │
+│   informações)      │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────────────────┐
+│  1ª Rede Neural                 │
+│  (Classificação de Perfil)      │
+│                                 │
+│  • Entrada: 15 features         │
+│  • Arquitetura: MLP (15-15-10-5-3) │
+│  • Saída: Perfil + Score (0-1)  │
+│  • Acurácia: 91%                │
+└──────────┬──────────────────────┘
+           │
+           ▼
+┌─────────────────────────────────┐
+│  2ª Rede Neural                 │
+│  (Alocação de Portfólio)        │
+│                                 │
+│  • Entrada: Score + 7 features  │
+│  • Arquitetura: MLP (8-100-50-6)│
+│  • Saída: 6 alocações %         │
+│  • R²: > 0.85                   │
+└──────────┬──────────────────────┘
+           │
+           ▼
+┌─────────────────────────────────┐
+│  Resposta Enriquecida           │
+│  • Alocação personalizada       │
+│  • Produtos sugeridos           │
+│  • Métricas (Sharpe, retorno)   │
+│  • Alertas personalizados       │
+└─────────────────────────────────┘
+```
 
-## 🎯 Status
+### 6 Classes de Ativos
 
-- [x] Estrutura inicial
-- [ ] Rede neural para classificação
-- [ ] API de recomendações
-- [ ] Interface mobile
-- [ ] Integração GPT
+1. 💰 **Renda Fixa** (Tesouro Direto, CDBs)
+2. 📈 **Ações Brasil** (Bovespa, ETFs)
+3. 🌎 **Ações Internacional** (S&P 500, MSCI World)
+4. 🏢 **Fundos Imobiliários** (FIIs)
+5. 🥇 **Commodities** (Ouro, ETFs)
+6. ₿ **Criptomoedas** (Bitcoin, Ethereum)
 
-## 👤 Autor
+---
 
-Bruna Ribeiro Cedro - Sistemas de Informação  
-Orientadora: Susana Bunoro
+## 🚀 Como Executar
+
+### Pré-requisitos
+
+- Python 3.13+
+- pip
+
+### Instalação
+
+```bash
+# Clonar o repositório
+git clone https://github.com/seu-usuario/investe-ai.git
+cd investe-ai
+
+# Criar ambiente virtual
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# ou
+venv\Scripts\activate  # Windows
+
+# Instalar dependências
+pip install -r backend/requirements.txt
+```
+
+### Executar a API
+
+```bash
+# Navegar para o diretório da API
+cd backend/api
+
+# Iniciar servidor
+python main.py
+```
+
+A API estará disponível em: **http://localhost:8000**
+
+### Documentação Interativa
+
+Acesse a documentação Swagger em: **http://localhost:8000/docs**
+
+---
+
+## 📡 Endpoints da API
+
+### 1. Health Check
+
+```http
+GET /
+```
+
+**Resposta:**
+```json
+{
+  "status": "online",
+  "versao": "2.0.0",
+  "modelo_perfil": "Carregado",
+  "modelo_alocacao": "Carregado"
+}
+```
+
+### 2. Classificar Perfil
+
+```http
+POST /api/classificar-perfil
+```
+
+**Body:**
+```json
+{
+  "idade": 25,
+  "renda_mensal": 8000,
+  "patrimonio_total": 20000,
+  "experiencia_investimento": 2,
+  "objetivo_principal": "crescimento_patrimonio",
+  "horizonte_investimento": 30,
+  "tolerancia_risco": "arrojado",
+  "conhecimento_mercado": "basico",
+  "tem_reserva_emergencia": true,
+  "percentual_investir": 30
+}
+```
+
+**Resposta:**
+```json
+{
+  "perfil": "Muito Arrojado",
+  "score_risco": 0.8,
+  "descricao": "Busca maximizar retornos aceitando alta volatilidade"
+}
+```
+
+### 3. Recomendar Portfólio (Completo)
+
+```http
+POST /api/recomendar-portfolio
+```
+
+**Resposta:**
+```json
+{
+  "perfil_risco": "Muito Arrojado",
+  "alocacao_recomendada": {
+    "Renda Fixa": 15.7,
+    "Ações Brasil": 31.9,
+    "Ações Internacional": 19.8,
+    "Fundos Imobiliários": 9.5,
+    "Commodities": 14.3,
+    "Criptomoedas": 8.8
+  },
+  "produtos_sugeridos": {...},
+  "metricas": {
+    "retorno_esperado_anual": 13.18,
+    "risco_anual": 21.51,
+    "sharpe_ratio": 0.07
+  },
+  "alertas": [...]
+}
+```
+
+---
+
+## 🧪 Testes
+
+```bash
+# Executar todos os testes
+python -m pytest backend/tests/
+
+# Teste específico
+python backend/tests/test_api_completo.py
+```
+
+**Cobertura:** 100% (5/5 testes passando)
+
+---
+
+## 📊 Dataset
+
+O sistema foi treinado com **500 casos validados** por especialista financeiro certificado (CFP®, CGA), seguindo normas:
+- **CVM 539/2013** (Suitability)
+- **ANBIMA** - Código de Regulação e Melhores Práticas
+
+### Distribuição de Perfis
+
+| Perfil | Casos | % |
+|--------|-------|---|
+| Conservador | 24 | 4,8% |
+| Moderado | 344 | 68,8% |
+| Agressivo | 132 | 26,4% |
+
+---
+
+## 📁 Estrutura do Projeto
+
+```
+investe-ai/
+├── backend/
+│   ├── api/                  # API FastAPI
+│   │   ├── main.py          # Servidor principal
+│   │   └── routes/          # Rotas organizadas
+│   ├── data/                # Datasets
+│   ├── models/              # Modelos de IA
+│   ├── scripts/             # Scripts utilitários
+│   └── tests/               # Testes automatizados
+├── docs/                    # Documentação do TCC
+│   ├── latex/               # Arquivos LaTeX
+│   ├── guides/              # Guias e tutoriais
+│   └── assets/              # Figuras e visualizações
+├── frontend/                # [FUTURO] App React Native
+└── README.md
+```
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+### Backend
+- **Python 3.13** - Linguagem principal
+- **FastAPI 0.104** - Framework web moderno e rápido
+- **scikit-learn 1.3.2** - Machine Learning
+- **Pandas 2.1.3** - Manipulação de dados
+- **NumPy 1.26.2** - Computação numérica
+- **Uvicorn 0.24** - Servidor ASGI
+
+### Machine Learning
+- **Multi-Layer Perceptron (MLP)** - Redes neurais
+- **StandardScaler** - Normalização z-score
+- **Stratified K-Fold** - Validação cruzada
+- **Adam Optimizer** - Otimização adaptativa
+
+---
+
+## 📈 Métricas de Desempenho
+
+### Primeira Rede Neural (Classificação)
+
+| Métrica | Valor |
+|---------|-------|
+| Acurácia | 91,00% |
+| F1-Score (macro) | 83,00% |
+| Cohen's Kappa | 0,8026 |
+| Validação Cruzada | 90,20% (±2,32%) |
+| Tempo de Treinamento | < 5 segundos |
+
+### Segunda Rede Neural (Regressão)
+
+| Métrica | Valor |
+|---------|-------|
+| R² | > 0,85 |
+| Tempo de Resposta | < 100ms |
+
+### Comparação com Literatura
+
+| Estudo | Método | Acurácia |
+|--------|--------|----------|
+| **Investe-AI** | **MLP** | **91,00%** ✅ |
+| Costa & Oliveira (2020) | Random Forest | 89,2% |
+| Rocha et al. (2022) | XGBoost | 88,4% |
+| Silva et al. (2019) | SVM | 87,5% |
+
+---
+
+## 📚 Documentação Adicional
+
+- [Guia Rápido da API](docs/guides/GUIA_API.md)
+- [Métricas Detalhadas](docs/guides/METRICAS.md)
+- [Visualizações e Figuras](docs/guides/VISUALIZACOES.md)
+- [Compilação LaTeX](docs/guides/COMPILACAO_LATEX.md)
+
+---
+
+## 🤝 Contribuindo
+
+Este é um projeto de TCC, mas sugestões são bem-vindas:
+
+1. Fork o projeto
+2. Crie uma branch (`git checkout -b feature/MinhaFeature`)
+3. Commit suas mudanças (`git commit -m 'feat: adiciona MinhaFeature'`)
+4. Push para a branch (`git push origin feature/MinhaFeature`)
+5. Abra um Pull Request
+
+---
+
+## 📝 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+---
+
+## 👥 Autoria
+
+**Bruna Ribeiro Cedro**
+Bacharelado em Sistemas de Informação
+IFES - Instituto Federal do Espírito Santo
+
+**Orientadora:** Prof.ª Susana Bunoro
+
+---
+
+## 🎯 Roadmap
+
+### ✅ Concluído
+- [x] Backend com API REST
+- [x] Duas redes neurais treinadas
+- [x] Testes automatizados
+- [x] Documentação completa
+
+### 🚧 Em Desenvolvimento
+- [ ] Frontend React Native
+- [ ] Sistema de autenticação
+- [ ] Dashboard de análises
+
+### 📅 Futuro
+- [ ] App mobile (iOS/Android)
+- [ ] Integração com corretoras
+- [ ] Machine Learning contínuo
+- [ ] Análise de sentimento de mercado
+
+---
+
+## 📧 Contato
+
+Para dúvidas ou sugestões:
+- 📧 Email: [bruna@underlinetech.com.br]
+- 💼 LinkedIn: [in/brunacedro]
+- 🐙 GitHub: [@brunarcedro]
+
+---
+
+<div align="center">
+
+**⭐ Se este projeto foi útil, considere dar uma estrela!**
+
+Made with ❤️ and 🤖 by Bruna Ribeiro Cedro
+
+</div>

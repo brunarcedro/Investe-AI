@@ -18,10 +18,27 @@ class RiskProfileClassifier:
        self.scaler = StandardScaler() # Normalizador de dados
        self.is_trained = False  # Status de treinamento
        
-   def load_dataset(self, filepath='backend/data/dataset_simulado.csv'):
+   def load_dataset(self, filepath='../data/dataset_simulado.csv'):
        """Carrega o dataset e separa features do target"""
        print("Carregando dataset...")
-       df = pd.read_csv(filepath)
+       # Tenta múltiplos caminhos possíveis
+       import os
+       possible_paths = [
+           filepath,
+           'data/dataset_simulado.csv',
+           '../data/dataset_simulado.csv',
+           'backend/data/dataset_simulado.csv'
+       ]
+
+       df = None
+       for path in possible_paths:
+           if os.path.exists(path):
+               df = pd.read_csv(path)
+               print(f"Dataset carregado de: {path}")
+               break
+
+       if df is None:
+           raise FileNotFoundError(f"Dataset não encontrado. Tentou: {possible_paths}")
        
        # Separar features (X) e target (y)
        X = df.drop('perfil_risco', axis=1)
@@ -74,6 +91,33 @@ class RiskProfileClassifier:
        
        self.is_trained = True
        return train_accuracy, test_accuracy
+
+   def save_model(self, filepath='neural_network.pkl'):
+       """Salva o modelo treinado"""
+       import joblib
+       if not self.is_trained:
+           raise ValueError("Modelo não foi treinado ainda!")
+
+       joblib.dump({
+           'model': self.model,
+           'scaler': self.scaler,
+           'is_trained': self.is_trained
+       }, filepath)
+       print(f"\nModelo salvo em: {filepath}")
+
+   def load_model(self, filepath='neural_network.pkl'):
+       """Carrega um modelo treinado"""
+       import joblib
+       import os
+
+       if not os.path.exists(filepath):
+           raise FileNotFoundError(f"Modelo não encontrado: {filepath}")
+
+       data = joblib.load(filepath)
+       self.model = data['model']
+       self.scaler = data['scaler']
+       self.is_trained = data['is_trained']
+       print(f"Modelo carregado de: {filepath}")
    
    def predict(self, user_data):
        """Classifica um novo usuário"""
@@ -136,10 +180,15 @@ def test_classifier():
    
    print(f"\n=== TESTE CONCLUÍDO ===")
    print(f"Acurácia final: {test_acc:.3f}")
-   
+
+   # Salvar modelo
+   print("\n=== SALVANDO MODELO ===")
+   classifier.save_model('neural_network.pkl')
+
    return classifier
 
 if __name__ == "__main__":
    print("Iniciando teste da rede neural...")
    classifier = test_classifier()
-   print("Teste finalizado com sucesso!")
+   print("\nTeste finalizado com sucesso!")
+   print("Modelo salvo e pronto para uso!")
