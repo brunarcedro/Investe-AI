@@ -1,0 +1,118 @@
+% Tabelas Simples - Métricas da Segunda Rede Neural
+% Para incluir em documento existente
+
+% ============================================
+% TABELA 1: Métricas Principais
+% ============================================
+\begin{table}[h!]
+\centering
+\caption{Métricas de desempenho da segunda rede neural (MLPRegressor)}
+\label{tab:metricas_segunda_rede}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Métrica} & \textbf{Treinamento} & \textbf{Teste} \\
+\midrule
+MSE (Mean Squared Error) & 0.001212 & 0.003644 \\
+MAE (Mean Absolute Error) & 0.025476 & 0.045389 \\
+R² (Coeficiente de Determinação) & 0.6747 & 0.1998 \\
+\midrule
+\textbf{Amostras} & 400 & 100 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================
+% TABELA 2: Interpretação em Percentuais
+% ============================================
+\begin{table}[h!]
+\centering
+\caption{Interpretação das métricas em percentuais de alocação}
+\label{tab:interpretacao_percentuais}
+\begin{tabular}{lcl}
+\toprule
+\textbf{Métrica} & \textbf{Valor} & \textbf{Interpretação Prática} \\
+\midrule
+\multicolumn{3}{c}{\textit{Conjunto de Teste}} \\
+\midrule
+MSE & 0.36\% & Erro quadrático médio \\
+MAE & 4.54\% & Erro médio de $\pm$4.54 p.p. por ativo \\
+R² & 19.98\% & Explica 20\% da variação \\
+\bottomrule
+\end{tabular}
+\end{table}
+\begin{table}[h!]
+\centering
+\caption{Interpretação das métricas em percentuais de alocação}
+\label{tab:interpretacao_percentuais}
+\begin{tabular}{lcl}
+\toprule
+\textbf{Métrica} & \textbf{Valor} & \textbf{Interpretação Prática} \\
+\midrule
+\multicolumn{3}{c}{\textit{Conjunto de Teste}} \\
+\midrule
+MSE & 0.36\% & Erro quadrático médio \\
+MAE & 4.54\% & Erro médio de $\pm$4.54 p.p. por ativo \\
+R² & 19.98\% & Explica 20\% da variação \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================
+% TABELA 3: Arquitetura da Rede
+% ============================================
+\begin{table}[h!]
+\centering
+\caption{Configuração da segunda rede neural}
+\label{tab:arquitetura}
+\begin{tabular}{ll}
+\toprule
+\textbf{Parâmetro} & \textbf{Valor} \\
+\midrule
+Tipo de Rede & MLPRegressor \\
+Camadas Ocultas & (100, 50) neurônios \\
+Função de Ativação & ReLU \\
+Otimizador & Adam \\
+Taxa de Aprendizado & 0.001 (adaptativa) \\
+Regularização $\alpha$ & 0.001 \\
+Early Stopping & Sim (15\% validação) \\
+Máximo de Iterações & 1500 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================
+% INTERPRETAÇÃO RESUMIDA
+% ============================================
+
+\subsection*{Interpretação dos Resultados}
+
+\textbf{MSE (Mean Squared Error):}
+O erro quadrático médio de 0.003644 no teste (0.36\%) indica que os erros de alocação são pequenos, com penalização maior para erros grandes.
+
+\textbf{MAE (Mean Absolute Error):}
+O erro absoluto médio de 4.54\% significa que, em média, o modelo erra 4.54 pontos percentuais por classe de ativo. Por exemplo, se a alocação ideal é 30\% em ações, o modelo pode prever entre 25.46\% e 34.54\%.
+
+\textbf{R² (Coeficiente de Determinação):}
+\begin{itemize}
+    \item \textbf{Treino:} R² = 67.47\% (bom desempenho)
+    \item \textbf{Teste:} R² = 19.98\% (desempenho limitado)
+    \item A diferença indica \textbf{overfitting} - o modelo memoriza padrões do treino mas não generaliza bem
+\end{itemize}
+
+\textbf{Diagnóstico:}
+\begin{itemize}
+    \item Overfitting evidenciado pelo R² de teste 70\% menor que o de treino
+    \item MAE em teste (4.54\%) quase 2× maior que em treino (2.55\%)
+    \item Causas prováveis: dataset pequeno (500 amostras), arquitetura complexa, dados sintéticos
+\end{itemize}
+
+\textbf{Avaliação para TCC:}
+\begin{itemize}
+    \item[$\checkmark$] Adequado como prova de conceito
+    \item[$\checkmark$] MAE de 4.54\% é razoável para recomendação inicial
+    \item[$\times$] R² baixo (20\%) limita capacidade preditiva
+    \item[$\checkmark$] Demonstra conhecimento de métricas e arquitetura de redes neurais
+\end{itemize}
+
+\textbf{Melhorias sugeridas:}
+Aumentar dataset, aplicar regularização mais forte, usar cross-validation, simplificar arquitetura para (50, 25) neurônios, validar com dados reais.

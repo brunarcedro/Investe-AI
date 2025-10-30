@@ -208,4 +208,19 @@ __marimo__/
 
 # Claude Code
 .claude/
-CLAUDE.md
+
+# Project-specific
+backend/outputs/
+backend/archived/
+*.pkl
+*.h5
+*.joblib
+*.nul
+
+# Temporary documentation files
+*_FINAL.md
+*_SUMMARY.md
+RESUMO_*.md
+STATUS_*.md
+TUDO_*.md
+docs/markdown/

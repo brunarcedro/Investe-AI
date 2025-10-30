@@ -1,0 +1,290 @@
+% Tabela de Métricas da Segunda Rede Neural - Alocação de Portfolio
+% Sistema Investe-AI - TCC
+
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[portuguese]{babel}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{xcolor}
+\usepackage{geometry}
+\geometry{a4paper, margin=2.5cm}
+
+\begin{document}
+
+\section*{Métricas de Avaliação - Segunda Rede Neural}
+\subsection*{Modelo de Alocação de Portfolio}
+
+% Tabela Principal de Métricas
+\begin{table}[h!]
+\centering
+\caption{Métricas de desempenho da segunda rede neural (MLPRegressor) para alocação de portfolio}
+\label{tab:metricas_segunda_rede}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Métrica} & \textbf{Treinamento} & \textbf{Teste} \\
+\midrule
+MSE (Mean Squared Error) & 0.001212 & 0.003644 \\
+MAE (Mean Absolute Error) & 0.025476 & 0.045389 \\
+R² (Coeficiente de Determinação) & 0.6747 & 0.1998 \\
+\midrule
+\textbf{Amostras} & 400 & 100 \\
+\textbf{Features de Entrada} & \multicolumn{2}{c}{8} \\
+\textbf{Saídas (Classes de Ativos)} & \multicolumn{2}{c}{6} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% Interpretação em Percentuais
+\begin{table}[h!]
+\centering
+\caption{Interpretação prática das métricas em percentuais de alocação}
+\label{tab:interpretacao_metricas}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Métrica} & \textbf{Valor} & \textbf{Significado Prático} \\
+\midrule
+\multicolumn{3}{l}{\textit{Conjunto de Treinamento}} \\
+\midrule
+MAE & 2.55\% & Erro médio de \textbf{2.55 pontos percentuais} por ativo \\
+MSE & 0.12\% & Penalização quadrática dos erros \\
+R² & 67.47\% & Modelo explica \textbf{67.47\%} da variação \\
+\midrule
+\multicolumn{3}{l}{\textit{Conjunto de Teste}} \\
+\midrule
+MAE & 4.54\% & Erro médio de \textbf{4.54 pontos percentuais} por ativo \\
+MSE & 0.36\% & Penalização quadrática dos erros \\
+R² & 19.98\% & Modelo explica \textbf{19.98\%} da variação \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% Arquitetura da Rede
+\begin{table}[h!]
+\centering
+\caption{Configuração da arquitetura da segunda rede neural}
+\label{tab:arquitetura_segunda_rede}
+\begin{tabular}{ll}
+\toprule
+\textbf{Parâmetro} & \textbf{Valor} \\
+\midrule
+Tipo de Rede & MLPRegressor \\
+Camadas Ocultas & (100, 50) neurônios \\
+Função de Ativação & ReLU \\
+Algoritmo de Otimização & Adam \\
+Taxa de Aprendizado Inicial & 0.001 \\
+Taxa de Aprendizado & Adaptativa \\
+Regularização (alpha) & 0.001 \\
+Early Stopping & Sim \\
+Fração de Validação & 15\% \\
+Iterações sem Melhora & 20 \\
+Iterações Máximas & 1500 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\newpage
+
+\section*{Interpretação Detalhada dos Resultados}
+
+\subsection*{1. Análise das Métricas}
+
+\subsubsection*{MSE (Mean Squared Error)}
+
+O MSE (Erro Quadrático Médio) mede a média dos quadrados das diferenças entre valores preditos e reais.
+
+\begin{itemize}
+    \item \textbf{Treinamento:} MSE = 0.001212 (0.12\%)
+    \item \textbf{Teste:} MSE = 0.003644 (0.36\%)
+\end{itemize}
+
+\textbf{Interpretação:}
+\begin{itemize}
+    \item O MSE baixo indica que os erros de alocação são pequenos
+    \item A elevação ao quadrado penaliza erros grandes mais severamente
+    \item MSE em teste 3× maior que em treino sugere \textcolor{red}{possível overfitting}
+    \item Em termos práticos: erros quadráticos médios abaixo de 1\% são aceitáveis para alocação de portfolio
+\end{itemize}
+
+\subsubsection*{MAE (Mean Absolute Error)}
+
+O MAE (Erro Absoluto Médio) representa o erro médio em pontos percentuais de alocação.
+
+\begin{itemize}
+    \item \textbf{Treinamento:} MAE = 0.025476 (2.55\%)
+    \item \textbf{Teste:} MAE = 0.045389 (4.54\%)
+\end{itemize}
+
+\textbf{Interpretação:}
+\begin{itemize}
+    \item Em média, o modelo erra \textbf{4.54 pontos percentuais} por classe de ativo no conjunto de teste
+    \item \textbf{Exemplo prático:} Se a alocação ideal é 30\% em ações, o modelo pode prever entre 25.46\% e 34.54\%
+    \item MAE é mais interpretável que MSE para comunicar resultados a usuários finais
+    \item Erro de $\pm$4.54\% é \textcolor{orange}{razoável} para recomendação inicial, mas pode ser melhorado
+\end{itemize}
+
+\subsubsection*{R² (Coeficiente de Determinação)}
+
+O R² mede a proporção da variância nos dados que é explicada pelo modelo.
+
+\begin{itemize}
+    \item \textbf{Treinamento:} R² = 0.6747 (67.47\%)
+    \item \textbf{Teste:} R² = 0.1998 (19.98\%)
+\end{itemize}
+
+\textbf{Interpretação:}
+\begin{itemize}
+    \item R² varia de 0 a 1, onde 1 = explicação perfeita
+    \item \textbf{Treino:} 67.47\% da variação é explicada pelo modelo (bom desempenho)
+    \item \textbf{Teste:} Apenas 19.98\% da variação é explicada (\textcolor{red}{desempenho fraco})
+    \item \textbf{Gap entre treino e teste:} Indica \textcolor{red}{overfitting significativo}
+    \item O modelo memorizou padrões do treino mas não generaliza bem para dados novos
+\end{itemize}
+
+\subsection*{2. Diagnóstico: Overfitting}
+
+\subsubsection*{Evidências de Overfitting}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Métrica} & \textbf{Treino} & \textbf{Teste} & \textbf{Diferença} \\
+\midrule
+MSE & 0.001212 & 0.003644 & \textcolor{red}{3.0×} \\
+MAE & 0.025476 & 0.045389 & \textcolor{red}{1.78×} \\
+R² & 0.6747 & 0.1998 & \textcolor{red}{-70.4\%} \\
+\bottomrule
+\end{tabular}
+\caption{Comparação entre métricas de treino e teste}
+\end{table}
+
+\textbf{Sinais de alerta:}
+\begin{enumerate}
+    \item MSE em teste é 3× maior que em treinamento
+    \item MAE em teste é quase 2× maior que em treinamento
+    \item R² cai drasticamente de 67\% para 20\%
+    \item O modelo performa bem em dados conhecidos mas mal em dados novos
+\end{enumerate}
+
+\subsection*{3. Causas Prováveis}
+
+\begin{enumerate}
+    \item \textbf{Dataset pequeno:} Apenas 500 amostras sintéticas
+    \begin{itemize}
+        \item Conjunto de treino: 400 amostras
+        \item Conjunto de teste: 100 amostras
+        \item Para redes neurais, tipicamente são necessárias milhares de amostras
+    \end{itemize}
+
+    \item \textbf{Arquitetura complexa para dados limitados:}
+    \begin{itemize}
+        \item Camadas ocultas com 100 e 50 neurônios
+        \item Total de parâmetros treináveis muito alto
+        \item Rede tem capacidade para memorizar dados de treino
+    \end{itemize}
+
+    \item \textbf{Dados sintéticos com padrões determinísticos:}
+    \begin{itemize}
+        \item Regras fixas para gerar alocações
+        \item Pouca variabilidade natural
+        \item Modelo aprende regras em vez de padrões reais
+    \end{itemize}
+
+    \item \textbf{Early stopping não foi suficiente:}
+    \begin{itemize}
+        \item Fração de validação de apenas 15\%
+        \item Pode ter convergido para mínimo local
+    \end{itemize}
+\end{enumerate}
+
+\newpage
+
+\subsection*{4. Qualidade para Aplicação Prática}
+
+\subsubsection*{Pontos Fortes}
+
+\begin{itemize}
+    \item \textbf{MAE de 4.54\%:} Erro tolerável para recomendação inicial
+    \item \textbf{Conceito validado:} Prova de conceito funcional da arquitetura dual
+    \item \textbf{Normalização garantida:} Alocações sempre somam 100\%
+    \item \textbf{Sem valores negativos:} Restrições financeiras respeitadas
+    \item \textbf{Respeita perfis de risco:} Conservadores recebem mais renda fixa, agressivos mais ações
+\end{itemize}
+
+\subsubsection*{Limitações}
+
+\begin{itemize}
+    \item \textbf{R² baixo em teste (20\%):} Capacidade preditiva limitada
+    \item \textbf{Overfitting:} Não generaliza bem para novos casos
+    \item \textbf{Variabilidade alta:} Erros de até $\pm$4.54\% podem impactar retornos
+    \item \textbf{Dados sintéticos:} Não refletem complexidade do mercado real
+\end{itemize}
+
+\subsection*{5. Recomendações para Melhoria}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{p{4cm}p{9cm}}
+\toprule
+\textbf{Estratégia} & \textbf{Implementação} \\
+\midrule
+\textbf{1. Aumentar Dataset} &
+Coletar dados reais de carteiras de investidores ou gerar 5.000+ amostras sintéticas com mais variabilidade \\
+\midrule
+\textbf{2. Regularização} &
+Aumentar alpha (ex: 0.01 ou 0.1) para penalizar complexidade excessiva \\
+\midrule
+\textbf{3. Simplificar Arquitetura} &
+Reduzir camadas ocultas para (50, 25) ou (30, 15) neurônios \\
+\midrule
+\textbf{4. Cross-Validation} &
+Usar K-Fold (5 ou 10 folds) em vez de holdout simples \\
+\midrule
+\textbf{5. Dropout} &
+Adicionar camadas de dropout (20-30\%) para reduzir overfitting \\
+\midrule
+\textbf{6. Validação Especialista} &
+Comparar predições com recomendações de consultores financeiros reais \\
+\midrule
+\textbf{7. Ensemble} &
+Combinar múltiplos modelos (rede neural + regras + árvore de decisão) \\
+\midrule
+\textbf{8. Feature Engineering} &
+Adicionar interações entre features (ex: idade × risco, patrimônio × experiência) \\
+\bottomrule
+\end{tabular}
+\caption{Estratégias de melhoria do modelo}
+\end{table}
+
+\subsection*{6. Conclusão}
+
+O modelo de segunda rede neural apresenta:
+
+\begin{itemize}
+    \item \textbf{Desempenho em treino:} \textcolor{green}{BOM} (R² = 67\%, MAE = 2.5\%)
+    \item \textbf{Desempenho em teste:} \textcolor{orange}{RAZOÁVEL} (R² = 20\%, MAE = 4.5\%)
+    \item \textbf{Generalização:} \textcolor{red}{FRACA} (overfitting evidente)
+\end{itemize}
+
+\textbf{Para um TCC (Trabalho de Conclusão de Curso):}
+\begin{itemize}
+    \item[$\checkmark$] \textbf{Adequado} como prova de conceito
+    \item[$\checkmark$] \textbf{Demonstra} conhecimento de redes neurais e métricas
+    \item[$\checkmark$] \textbf{Funcional} para demonstração do sistema
+    \item[$\times$] \textbf{Não pronto} para produção sem melhorias
+    \item[$\checkmark$] \textbf{Base sólida} para trabalhos futuros
+\end{itemize}
+
+\textbf{Recomendação final:}
+
+Este modelo serve como \textbf{MVP (Minimum Viable Product)} que valida a abordagem de dupla rede neural para recomendação de carteiras. Para uso em produção, é essencial implementar as melhorias sugeridas, especialmente:
+\begin{enumerate}
+    \item Aumentar significativamente o tamanho do dataset
+    \item Aplicar técnicas anti-overfitting (regularização, dropout, cross-validation)
+    \item Validar com dados reais de mercado
+\end{enumerate}
+
+O MAE de 4.54\% é aceitável para orientação inicial, mas pode comprometer retornos em portfolios reais de longo prazo.
+
+\end{document}

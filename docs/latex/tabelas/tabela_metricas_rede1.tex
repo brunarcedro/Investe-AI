@@ -1,0 +1,23 @@
+\begin{table}[htbp]
+\centering
+\caption{Métricas de Performance da Primeira Rede Neural (Conjunto de Teste)}
+\label{tab:metricas_rede1}
+\small
+\begin{tabular}{lcccp{6cm}}
+\toprule
+\textbf{Métrica} & \textbf{Valor} & \textbf{Percentual} & \textbf{Benchmark} & \textbf{Interpretação} \\
+\midrule
+Acurácia (Accuracy) & 0.7833 & 78.33\% & Bom & Modelo acerta quase 4 em cada 5 classificações de perfil de risco. \\
+\addlinespace
+Precisão (Precision) & 0.7775 & 77.75\% & Bom & Das previsões feitas, 77,75\% estão corretas, minimizando classificações erradas. \\
+\addlinespace
+Revocação (Recall) & 0.7833 & 78.33\% & Bom & Modelo identifica 78,33\% dos perfis reais, com baixa taxa de falsos negativos. \\
+\addlinespace
+F1-Score & 0.7771 & 77.71\% & Bom & Balanceamento adequado entre precisão e revocação para todas as classes. \\
+\addlinespace
+ROC-AUC & 0.8690 & 86.90\% & Muito Bom & Excelente capacidade discriminatória entre as classes de perfil de risco. \\
+\midrule
+\multicolumn{5}{l}{\textit{Dados adicionais: Conjunto de teste com 60 amostras | 3 classes balanceadas | Tempo de treinamento: <1s}} \\
+\bottomrule
+\end{tabular}
+\end{table}

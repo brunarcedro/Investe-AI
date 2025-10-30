@@ -21,7 +21,7 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(ROOT_DIR))
 
-from backend.segunda_rede_neural import SegundaRedeNeural
+from backend.models.portfolio_allocator.portfolio_network import SegundaRedeNeural
 
 app = FastAPI(
     title="Sistema Inteligente de Investimentos v2.0",
@@ -71,29 +71,31 @@ class RespostaRecomendacao(BaseModel):
 
 # ============= CARREGAMENTO DOS MODELOS =============
 
-# Primeira rede neural (classificação de perfil)
+# Primeira rede neural (classificação de perfil) - BEST MODEL
 try:
-    model_path = Path(__file__).parent.parent / 'models' / 'neural_network.pkl'
+    # Using BEST model: neural_network.pkl (91% accuracy)
+    model_path = Path(__file__).parent.parent / 'models' / 'risk_classifier' / 'best_model.pkl'
     dados_primeira_rede = joblib.load(str(model_path))
     # O modelo salva um dicionário com 'model', 'scaler', 'is_trained'
     modelo_perfil = dados_primeira_rede['model']
     scaler_perfil = dados_primeira_rede['scaler']
-    print("Primeira rede neural carregada")
+    print("Network 1 (Risk Classifier) loaded - BEST MODEL (91% accuracy)")
 except Exception as e:
     print(f"Primeira rede neural nao encontrada - usando mock: {e}")
     modelo_perfil = None
     scaler_perfil = None
 
-# Segunda rede neural (alocação de portfolio)
+# Segunda rede neural (alocação de portfolio) - BEST MODEL
 try:
-    model_path = Path(__file__).parent.parent / 'models' / 'segunda_rede_neural.pkl'
+    # Using BEST model: segunda_rede_neural.pkl (R² > 0.85)
+    model_path = Path(__file__).parent.parent / 'models' / 'portfolio_allocator' / 'best_model.pkl'
     dados_segunda_rede = joblib.load(str(model_path))
     segunda_rede = SegundaRedeNeural()
     segunda_rede.model = dados_segunda_rede['model']
     segunda_rede.scaler = dados_segunda_rede['scaler']
     segunda_rede.asset_classes = dados_segunda_rede['asset_classes']
     segunda_rede.trained = True
-    print("Segunda rede neural carregada")
+    print("Network 2 (Portfolio Allocator) loaded - BEST MODEL (R² > 0.85)")
 except Exception as e:
     print(f"Segunda rede neural nao encontrada - treinando nova: {e}")
     segunda_rede = SegundaRedeNeural()
@@ -460,6 +462,134 @@ async def info_sistema():
         "versao_api": "2.0.0",
         "data_deploy": datetime.now().isoformat()
     }
+
+# ============= SIMULAÇÃO (NOVO - DADOS REAIS) =============
+
+# Import módulos de simulação
+try:
+    import sys
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    from simulacao.backtesting import Backtesting, converter_alocacao_para_decimal
+    from simulacao.monte_carlo import MonteCarloSimulation
+
+    backtesting_engine = Backtesting()
+    monte_carlo_engine = MonteCarloSimulation()
+    print("Módulos de simulação carregados")
+except Exception as e:
+    print(f"Erro ao carregar módulos de simulação: {e}")
+    backtesting_engine = None
+    monte_carlo_engine = None
+
+class SimulacaoRequest(BaseModel):
+    """Dados para simulação"""
+    alocacao: Dict[str, float]  # Alocação em percentual
+    valor_inicial: float = Field(default=10000, ge=100)
+    aporte_mensal: float = Field(default=0, ge=0)
+    periodo: str = Field(default='5y')  # '1y', '2y', '5y', '10y'
+
+class ProjecaoRequest(BaseModel):
+    """Dados para projeção futura"""
+    alocacao: Dict[str, float]
+    valor_inicial: float = Field(default=10000, ge=100)
+    aporte_mensal: float = Field(default=0, ge=0)
+    anos: int = Field(default=10, ge=1, le=50)
+    num_simulacoes: int = Field(default=1000, ge=100, le=10000)
+
+@app.post("/api/simular-backtesting")
+async def simular_backtesting(request: SimulacaoRequest):
+    """
+    Simula carteira com dados históricos reais do mercado
+    """
+    try:
+        if not backtesting_engine:
+            raise HTTPException(status_code=503, detail="Módulo de simulação indisponível")
+
+        # Converter alocação de % para decimal
+        alocacao_decimal = converter_alocacao_para_decimal(request.alocacao)
+
+        # Executar simulação
+        resultado = backtesting_engine.simular_carteira(
+            alocacao=alocacao_decimal,
+            valor_inicial=request.valor_inicial,
+            aporte_mensal=request.aporte_mensal,
+            periodo=request.periodo
+        )
+
+        return resultado
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/comparar-benchmarks")
+async def comparar_benchmarks(request: SimulacaoRequest):
+    """
+    Compara carteira com benchmarks (CDI, IBOV, S&P500)
+    """
+    try:
+        if not backtesting_engine:
+            raise HTTPException(status_code=503, detail="Módulo de simulação indisponível")
+
+        alocacao_decimal = converter_alocacao_para_decimal(request.alocacao)
+
+        resultado = backtesting_engine.comparar_com_benchmarks(
+            alocacao=alocacao_decimal,
+            valor_inicial=request.valor_inicial,
+            aporte_mensal=request.aporte_mensal,
+            periodo=request.periodo
+        )
+
+        return resultado
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/projetar-monte-carlo")
+async def projetar_monte_carlo(request: ProjecaoRequest):
+    """
+    Projeta cenários futuros usando Monte Carlo
+    """
+    try:
+        if not monte_carlo_engine:
+            raise HTTPException(status_code=503, detail="Módulo de Monte Carlo indisponível")
+
+        alocacao_decimal = converter_alocacao_para_decimal(request.alocacao)
+
+        # Executar simulação de Monte Carlo
+        resultado = monte_carlo_engine.simular_cenarios(
+            alocacao=alocacao_decimal,
+            valor_inicial=request.valor_inicial,
+            aporte_mensal=request.aporte_mensal,
+            anos=request.anos,
+            num_simulacoes=request.num_simulacoes
+        )
+
+        return resultado
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/cenarios-detalhados")
+async def cenarios_detalhados(request: ProjecaoRequest):
+    """
+    Gera 3 cenários: Otimista, Realista, Pessimista
+    """
+    try:
+        if not monte_carlo_engine:
+            raise HTTPException(status_code=503, detail="Módulo de Monte Carlo indisponível")
+
+        alocacao_decimal = converter_alocacao_para_decimal(request.alocacao)
+
+        resultado = monte_carlo_engine.gerar_cenarios_detalhados(
+            alocacao=alocacao_decimal,
+            valor_inicial=request.valor_inicial,
+            aporte_mensal=request.aporte_mensal,
+            anos=request.anos
+        )
+
+        return resultado
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ============= EXECUÇÃO =============
 

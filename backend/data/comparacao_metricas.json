@@ -1,0 +1,32 @@
+{
+  "rede1_sintetico": {
+    "dataset": "Sintetico",
+    "n_samples": 300,
+    "n_features": 13,
+    "n_train": 240,
+    "n_test": 60,
+    "accuracy_train": 0.5166666666666667,
+    "accuracy_test": 0.4666666666666667,
+    "precision_weighted": 0.3854166666666667,
+    "recall_weighted": 0.4666666666666667,
+    "f1_weighted": 0.3994022092267706,
+    "cv_mean": 0.34,
+    "cv_std": 0.058309518948453015,
+    "n_iterations": 21,
+    "precision_per_class": {
+      "agressivo": 0.125,
+      "conservador": 0.25,
+      "moderado": 0.5416666666666666
+    },
+    "recall_per_class": {
+      "agressivo": 0.08333333333333333,
+      "conservador": 0.06666666666666667,
+      "moderado": 0.7878787878787878
+    },
+    "f1_per_class": {
+      "agressivo": 0.1,
+      "conservador": 0.10526315789473684,
+      "moderado": 0.6419753086419753
+    },
+    "support_per_class": {
+      "agressivo": 

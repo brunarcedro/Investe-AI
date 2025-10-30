@@ -94,8 +94,8 @@ Jovens investidores brasileiros (18-45 anos) buscando democratização do acesso
 
 ```bash
 # Clonar o repositório
-git clone https://github.com/seu-usuario/investe-ai.git
-cd investe-ai
+git clone https://github.com/brunarcedro/Investe-AI.git
+cd Investe-AI
 
 # Criar ambiente virtual
 python -m venv venv
@@ -238,20 +238,37 @@ O sistema foi treinado com **500 casos validados** por especialista financeiro c
 
 ```
 investe-ai/
-├── backend/
-│   ├── api/                  # API FastAPI
-│   │   ├── main.py          # Servidor principal
-│   │   └── routes/          # Rotas organizadas
-│   ├── data/                # Datasets
-│   ├── models/              # Modelos de IA
-│   ├── scripts/             # Scripts utilitários
-│   └── tests/               # Testes automatizados
-├── docs/                    # Documentação do TCC
-│   ├── latex/               # Arquivos LaTeX
-│   ├── guides/              # Guias e tutoriais
-│   └── assets/              # Figuras e visualizações
-├── frontend/                # [FUTURO] App React Native
-└── README.md
+├── backend/                          # Backend principal
+│   ├── api/                          # API FastAPI v2.0
+│   │   └── main.py                   # Servidor com dupla rede neural
+│   ├── models/                       # Modelos de ML
+│   │   ├── risk_classifier/          # Classificador de perfil de risco
+│   │   │   ├── risk_network.py       # Implementação da 1ª rede neural
+│   │   │   └── best_risk_classifier.pkl  # Modelo treinado (acurácia 91%)
+│   │   └── portfolio_allocator/      # Alocador de portfólio
+│   │       ├── portfolio_network.py  # Implementação da 2ª rede neural
+│   │       └── best_portfolio_allocator.pkl  # Modelo treinado (R² > 0.85)
+│   ├── data/                         # Datasets e scripts ETL
+│   │   ├── dataset_hibrido.csv       # Dataset híbrido validado (500 casos)
+│   │   ├── merge_datasets.py         # Fusão de datasets
+│   │   └── validate_hybrid_dataset.py # Validação de dados
+│   ├── simulacao/                    # Módulos de simulação financeira
+│   │   ├── backtesting.py            # Backtesting com dados históricos reais
+│   │   └── monte_carlo.py            # Simulações estocásticas
+│   ├── scripts/                      # Scripts de treinamento e análise
+│   │   ├── train_models.py           # Treinamento dos modelos
+│   │   ├── generate_confusion_matrix.py  # Matriz de confusão
+│   │   ├── generate_network_charts.py    # Visualizações das redes
+│   │   ├── test_api.py               # Testes da API
+│   │   └── compare_all_models.py     # Comparação de modelos
+│   └── requirements.txt              # Dependências Python
+├── docs/                             # Documentação do TCC
+│   └── latex/                        # Arquivos LaTeX da monografia
+│       └── tabelas/                  # Tabelas LaTeX
+├── frontend/                         # Frontend React (em desenvolvimento)
+├── LICENSE                           # Licença MIT
+├── Procfile                          # Deploy Heroku
+└── README.md                         # Este arquivo
 ```
 
 ---
@@ -306,10 +323,13 @@ investe-ai/
 
 ## 📚 Documentação Adicional
 
-- [Guia Rápido da API](docs/guides/GUIA_API.md)
-- [Métricas Detalhadas](docs/guides/METRICAS.md)
-- [Visualizações e Figuras](docs/guides/VISUALIZACOES.md)
-- [Compilação LaTeX](docs/guides/COMPILACAO_LATEX.md)
+### Backend
+- [README do Backend](backend/README.md) - Documentação detalhada do backend
+- [Informações dos Modelos](backend/models/BEST_MODELS_INFO.md) - Detalhes dos modelos treinados
+- [Guia de Versões](backend/models/MODEL_VERSIONS_GUIDE.md) - Histórico de versões dos modelos
+
+### LaTeX e Monografia
+- [Tabelas LaTeX](docs/latex/tabelas/) - Tabelas formatadas para a monografia
 
 ---
 
@@ -365,9 +385,9 @@ IFES - Instituto Federal do Espírito Santo
 ## 📧 Contato
 
 Para dúvidas ou sugestões:
-- 📧 Email: [bruna@underlinetech.com.br]
-- 💼 LinkedIn: [in/brunacedro]
-- 🐙 GitHub: [@brunarcedro]
+- 📧 Email: bruna@underlinetech.com.br
+- 💼 LinkedIn: [linkedin.com/in/brunarcedro](https://linkedin.com/in/brunarcedro)
+- 🐙 GitHub: [@brunarcedro](https://github.com/brunarcedro)
 
 ---
 
@@ -375,6 +395,6 @@ Para dúvidas ou sugestões:
 
 **⭐ Se este projeto foi útil, considere dar uma estrela!**
 
-Made with ❤️ and 🤖 by Bruna Ribeiro Cedro
+Desenvolvido com ❤️ por Bruna Ribeiro Cedro
 
 </div>

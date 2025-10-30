@@ -1,0 +1,161 @@
+% Tabela para Slides - Formato Compacto
+% Métricas da Segunda Rede Neural
+
+% ============================================
+% OPÇÃO 1: Tabela Compacta com Cores
+% ============================================
+\begin{table}[h!]
+\centering
+\caption{Métricas - Segunda Rede Neural}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Métrica} & \textbf{Treino} & \textbf{Teste} \\
+\midrule
+MSE & \textcolor{green}{0.0012} & \textcolor{orange}{0.0036} \\
+MAE & \textcolor{green}{2.55\%} & \textcolor{orange}{4.54\%} \\
+R² & \textcolor{green}{67.47\%} & \textcolor{red}{19.98\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================
+% OPÇÃO 2: Duas Colunas - Métricas e Interpretação
+% ============================================
+\begin{table}[h!]
+\centering
+\small
+\begin{tabular}{p{3.5cm}p{6cm}}
+\toprule
+\textbf{Métrica (Teste)} & \textbf{Significado} \\
+\midrule
+MSE = 0.0036 & Erro quadrático médio de 0.36\% \\
+\midrule
+MAE = 4.54\% & Erro médio de $\pm$4.5 pontos percentuais por ativo \\
+\midrule
+R² = 19.98\% & Modelo explica apenas 20\% da variação (overfitting) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================
+% OPÇÃO 3: Comparação Visual com Barras
+% ============================================
+\begin{table}[h!]
+\centering
+\caption{Comparação Treino vs Teste}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Métrica} & \textbf{Treino} & \textbf{Teste} & \textbf{Diferença} \\
+\midrule
+MSE & 0.0012 & 0.0036 & \textcolor{red}{+200\%} \\
+MAE & 2.55\% & 4.54\% & \textcolor{red}{+78\%} \\
+R² & 67\% & 20\% & \textcolor{red}{-70\%} \\
+\midrule
+\textbf{Conclusão} & \multicolumn{3}{l}{\textbf{Overfitting detectado}} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================
+% OPÇÃO 4: Tabela de Resumo Executivo
+% ============================================
+\begin{table}[h!]
+\centering
+\begin{tabular}{ll}
+\toprule
+\multicolumn{2}{c}{\textbf{Segunda Rede Neural - Resumo}} \\
+\midrule
+\textbf{Arquitetura} & MLPRegressor (100, 50) \\
+\textbf{Amostras} & 500 (400 treino / 100 teste) \\
+\midrule
+\textbf{Erro Médio (MAE)} & 4.54\% por ativo \\
+\textbf{Poder Explicativo (R²)} & 20\% em teste \\
+\textbf{Diagnóstico} & Overfitting \\
+\midrule
+\textbf{Status TCC} & Prova de conceito validada \\
+\textbf{Produção} & Requer melhorias \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================
+% OPÇÃO 5: Interpretação em Bullet Points
+% ============================================
+\begin{frame}{Métricas da Segunda Rede Neural}
+\begin{table}[h!]
+\centering
+\begin{tabular}{lc}
+\toprule
+\textbf{Métrica} & \textbf{Valor (Teste)} \\
+\midrule
+MSE & 0.0036 \\
+MAE & 4.54\% \\
+R² & 19.98\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Interpretação:}
+\begin{itemize}
+    \item [\checkmark] MAE 4.54\%: erro médio tolerável
+    \item [\checkmark] Alocações sempre somam 100\%
+    \item [\times] R² baixo: overfitting (67\% treino → 20\% teste)
+    \item [\checkmark] Prova de conceito funcional para TCC
+\end{itemize}
+\end{frame}
+
+% ============================================
+% EXEMPLO DE USO EM SLIDE BEAMER
+% ============================================
+\begin{frame}{Avaliação da Segunda Rede}
+    \begin{columns}
+        \column{0.5\textwidth}
+        \textbf{Métricas de Teste:}
+        \begin{table}
+        \small
+        \begin{tabular}{lc}
+        \toprule
+        MSE & 0.0036 \\
+        MAE & 4.54\% \\
+        R² & 19.98\% \\
+        \bottomrule
+        \end{tabular}
+        \end{table}
+
+        \column{0.5\textwidth}
+        \textbf{Conclusões:}
+        \begin{itemize}
+            \item Erro médio: $\pm$4.5\%
+            \item Overfitting detectado
+            \item Adequado para TCC
+            \item Melhorias necessárias
+        \end{itemize}
+    \end{columns}
+\end{frame}
+
+% ============================================
+% TABELA COM SEMAFORIZAÇÃO
+% ============================================
+\begin{table}[h!]
+\centering
+\caption{Avaliação por Critério}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Critério} & \textbf{Valor} & \textbf{Status} \\
+\midrule
+Erro Médio (MAE) & 4.54\% & \textcolor{orange}{$\bigcirc$} Razoável \\
+Generalização (R²) & 19.98\% & \textcolor{red}{$\times$} Fraco \\
+Overfitting & Gap 70\% & \textcolor{red}{$\times$} Alto \\
+Viabilidade TCC & - & \textcolor{green}{\checkmark} Adequado \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================
+% NOTA SOBRE PACOTES NECESSÁRIOS
+% ============================================
+% Para usar essas tabelas, adicione no preâmbulo:
+% \usepackage{booktabs}
+% \usepackage{xcolor}
+% \usepackage{siunitx}
+% Para Beamer: \usepackage{beamer}
