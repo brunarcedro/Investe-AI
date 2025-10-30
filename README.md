@@ -23,10 +23,11 @@ Jovens investidores brasileiros (18-45 anos) buscando democratização do acesso
 ### 🏆 Resultados Alcançados
 
 - ✅ **91% de acurácia** na classificação de perfil de risco
+- ✅ **F1-Score: 83%** com validação cruzada de 90.20% (±2.32%)
 - ✅ **Cohen's Kappa: 0.8026** (concordância substancial)
-- ✅ **R² > 0.85** na recomendação de alocação
-- ✅ **100% de aprovação** nos testes automatizados (5/5)
-- ✅ **< 100ms** de tempo de resposta da API
+- ✅ **R² > 0.85** na recomendação de alocação de portfólio
+- ✅ **< 50ms** tempo de resposta (classificação) e **< 100ms** (alocação)
+- ✅ **1.279 casos** no dataset híbrido validado
 
 ---
 
@@ -46,9 +47,9 @@ Jovens investidores brasileiros (18-45 anos) buscando democratização do acesso
 │  (Classificação de Perfil)      │
 │                                 │
 │  • Entrada: 15 features         │
-│  • Arquitetura: MLP (15-15-10-5-3) │
+│  • Arquitetura: MLP (10, 5)     │
 │  • Saída: Perfil + Score (0-1)  │
-│  • Acurácia: 91%                │
+│  • Acurácia: 91% | F1: 83%      │
 └──────────┬──────────────────────┘
            │
            ▼
@@ -220,17 +221,20 @@ python backend/tests/test_api_completo.py
 
 ## 📊 Dataset
 
-O sistema foi treinado com **500 casos validados** por especialista financeiro certificado (CFP®, CGA), seguindo normas:
-- **CVM 539/2013** (Suitability)
-- **ANBIMA** - Código de Regulação e Melhores Práticas
+O sistema foi treinado com **1.279 casos** em dataset híbrido, combinando:
+- Dados sintéticos gerados com regras de negócio validadas
+- Casos reais validados por especialista financeiro
+- Conformidade com normas **CVM 539/2013** (Suitability) e **ANBIMA**
 
-### Distribuição de Perfis
+### Características do Dataset
 
-| Perfil | Casos | % |
-|--------|-------|---|
-| Conservador | 24 | 4,8% |
-| Moderado | 344 | 68,8% |
-| Agressivo | 132 | 26,4% |
+| Característica | Valor |
+|----------------|-------|
+| Total de Casos | 1.279 |
+| Features de Entrada | 15 |
+| Classes de Ativos | 6 |
+| Perfis de Risco | 3 (Conservador, Moderado, Agressivo) |
+| Validação | Especialista + Regras de Negócio |
 
 ---
 
@@ -249,7 +253,7 @@ investe-ai/
 │   │       ├── portfolio_network.py  # Implementação da 2ª rede neural
 │   │       └── best_portfolio_allocator.pkl  # Modelo treinado (R² > 0.85)
 │   ├── data/                         # Datasets e scripts ETL
-│   │   ├── dataset_hibrido.csv       # Dataset híbrido validado (500 casos)
+│   │   ├── dataset_hibrido.csv       # Dataset híbrido validado (1.279 casos)
 │   │   ├── merge_datasets.py         # Fusão de datasets
 │   │   └── validate_hybrid_dataset.py # Validação de dados
 │   ├── simulacao/                    # Módulos de simulação financeira
@@ -293,22 +297,27 @@ investe-ai/
 
 ## 📈 Métricas de Desempenho
 
-### Primeira Rede Neural (Classificação)
+### Primeira Rede Neural (Classificação de Perfil de Risco)
 
 | Métrica | Valor |
 |---------|-------|
 | Acurácia | 91,00% |
 | F1-Score (macro) | 83,00% |
-| Cohen's Kappa | 0,8026 |
+| Cohen's Kappa | 0,8026 (concordância substancial) |
 | Validação Cruzada | 90,20% (±2,32%) |
 | Tempo de Treinamento | < 5 segundos |
+| Tempo de Resposta | < 50ms |
+| Arquitetura | MLPClassifier (10, 5) + ReLU |
 
-### Segunda Rede Neural (Regressão)
+### Segunda Rede Neural (Alocação de Portfólio)
 
 | Métrica | Valor |
 |---------|-------|
-| R² | > 0,85 |
+| R² Score | > 0,85 |
+| Tempo de Treinamento | ~10 segundos |
 | Tempo de Resposta | < 100ms |
+| Arquitetura | MLPRegressor (100, 50) + adaptive |
+| Classes de Ativos | 6 (cobertura completa) |
 
 ### Comparação com Literatura
 
