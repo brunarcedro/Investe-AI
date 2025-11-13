@@ -1,0 +1,75 @@
+======================================================================
+RELATORIO: DATASETS PARA TREINAMENTO DAS REDES NEURAIS
+======================================================================
+
+1. RESUMO EXECUTIVO
+----------------------------------------------------------------------
+
+SINTETICO:
+  - Total de registros: 300
+  - Conservador: 73
+  - Moderado: 165
+  - Agressivo: 62
+
+SCF:
+  - Total de registros: 1000
+  - Conservador: 305
+  - Moderado: 514
+  - Agressivo: 181
+
+HIBRIDO:
+  - Total de registros: 1279
+  - Conservador: 419
+  - Moderado: 428
+  - Agressivo: 432
+  - Fontes de dados: {'scf': np.int64(980), 'sintetico': np.int64(299)}
+
+2. VANTAGENS DO DATASET HIBRIDO
+----------------------------------------------------------------------
+
+a) Baseado em distribuicoes REAIS do Survey of Consumer Finances (SCF)
+   - Dados coletados pelo Federal Reserve (EUA)
+   - Distribuicoes estatisticas validadas academicamente
+   - Escalas de tolerancia a risco testadas em pesquisas
+
+b) Maior volume de dados (1279 vs 300 registros)
+   - Melhora capacidade de generalizacao da rede neural
+   - Reduz risco de overfitting
+
+c) Balanceamento de classes
+   - Distribuicao equilibrada: ~33% cada perfil
+   - Evita vies do modelo para perfil majoritario
+
+d) Ajustado para contexto brasileiro
+   - Conversao monetaria USD -> BRL
+   - Ajuste de niveis de renda para realidade brasileira
+
+3. JUSTIFICATIVA PARA A BANCA
+----------------------------------------------------------------------
+
+Pergunta: 'Por que nao usar dados reais de investidores brasileiros?'
+
+Resposta:
+- Dados de investidores brasileiros sao CONFIDENCIAIS (regulacao CVM)
+- Instituicoes financeiras nao disponibilizam publicamente
+- Survey of Consumer Finances eh a MELHOR ALTERNATIVA PUBLICA disponivel
+- Usado extensivamente em pesquisas academicas internacionais
+- Permite reproducibilidade do estudo
+
+Adaptacoes realizadas:
+- Conversao monetaria (USD -> BRL)
+- Ajuste de niveis de renda para realidade brasileira
+- Combinacao com dados sinteticos para aumentar volume
+
+4. PROXIMOS PASSOS
+----------------------------------------------------------------------
+
+1. Retreinar primeira rede neural com dataset hibrido
+2. Retreinar segunda rede neural com dataset hibrido
+3. Comparar metricas de performance:
+   - Acuracia, Precision, Recall, F1-Score
+   - Antes (dataset sintetico) vs Depois (dataset hibrido)
+4. Adicionar no TCC:
+   - Secao sobre fonte de dados (SCF)
+   - Justificativa para uso de dados americanos
+   - Processo de adaptacao para contexto brasileiro

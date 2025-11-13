@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-dark-border;
+  }
+
+  body {
+    @apply bg-dark-bg text-dark-text;
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Scrollbar Dark Theme */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-dark-bg;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-dark-border rounded-lg;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-dark-hover;
+  }
+}
+
+@layer components {
+  /* Glass Card Effect */
+  .glass-card {
+    @apply bg-dark-card/50 backdrop-blur-xl border border-dark-border rounded-2xl;
+  }
+
+  /* Premium Button */
+  .btn-premium {
+    @apply bg-gradient-fintech text-white font-semibold px-6 py-3 rounded-xl
+           shadow-glow hover:shadow-glow-success transition-all duration-300
+           transform hover:scale-105;
+  }
+
+  /* Card with Hover Effect */
+  .card-hover {
+    @apply bg-dark-card border border-dark-border rounded-xl p-6
+           transition-all duration-300 hover:border-primary hover:shadow-glow;
+  }
+
+  /* Input Dark Theme */
+  .input-dark {
+    @apply bg-dark-card border border-dark-border text-dark-text px-4 py-3 rounded-lg
+           focus:border-primary focus:ring-2 focus:ring-primary/50 focus:outline-none
+           transition-all duration-200;
+  }
+
+  /* Tooltip */
+  .tooltip {
+    @apply absolute z-50 px-3 py-2 text-sm bg-dark-hover border border-dark-border
+           rounded-lg shadow-premium invisible opacity-0 transition-all duration-200;
+  }
+
+  .tooltip-trigger:hover .tooltip {
+    @apply visible opacity-100;
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "sintetico": {
+    "total_registros": 300,
+    "total_features": 16,
+    "perfis_risco": {
+      "conservador": 73,
+      "moderado": 165,
+      "agressivo": 62
+    },
+    "estatisticas": {
+      "idade": {
+        "min": 18.0,
+        "max": 25.0,
+        "mean": 21.546666666666667,
+        "median": 21.0
+      },
+      "renda_mensal": {
+        "min": 1005.0,
+        "max": 7975.0,
+        "mean": 3371.1666666666665,
+        "median": 2853.0
+      }
+    }
+  },
+  "scf": {
+    "total_registros": 1000,
+    "total_features": 16,
+    "perfis_risco": {
+      "conservador": 305,
+      "moderado": 514,
+      "agressivo": 181
+    },
+    "estatisticas": {
+      "idade": {
+        "min": 18.0,
+        "max": 83.0,
+        "mean": 51.201,
+        "median": 51.0
+      },
+      "renda_mensal": {
+        "min": 497.17,
+        "max": 73833.42,
+        "mean": 7103.42548,
+        "median": 5372.415
+      }
+    }
+  },
+  "hibrido": {
+    "total_registros": 1279,
+    "total_features": 18,
+    "perfis_risco": {
+      "conservador": 419,
+      "moderado": 428,
+      "agressivo": 432
+    },
+    "estatisticas": {
+      "idade": {
+        "min": 18.0,
+        "max": 83.0,
+        "mean": 43.955433932759966,
+        "median": 44.0
+      },
+      "renda_mensal": {
+        "min": 1005.0,
+        "max": 221500.26,
+        "mean": 17850.977802971072,
+        "median": 12079.26
+      }
+    }
+  }
+}

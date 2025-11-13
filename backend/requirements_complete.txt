@@ -1,0 +1,47 @@
+# Requirements completos para o projeto Investe-AI
+# Todas as bibliotecas necessárias para o modelo ultimate
+
+# Core ML
+numpy>=1.21.0
+pandas>=1.3.0
+scikit-learn>=1.0.0
+joblib>=1.1.0
+
+# Feature Engineering & Balanceamento
+imbalanced-learn>=0.9.0
+
+# Gradient Boosting
+xgboost>=1.7.0
+lightgbm>=3.3.0
+
+# Deep Learning
+tensorflow>=2.12.0
+keras>=2.12.0
+
+# API
+fastapi>=0.100.0
+uvicorn[standard]>=0.22.0
+pydantic>=2.0.0
+python-multipart>=0.0.6
+
+# Frontend
+streamlit>=1.24.0
+plotly>=5.14.0
+
+# Visualização
+matplotlib>=3.4.0
+seaborn>=0.11.0
+
+# Utilitários
+requests>=2.28.0
+python-dotenv>=1.0.0
+
+# Data fetching
+yfinance>=0.2.18  # Para dados de mercado (opcional)
+
+# Testing (opcional)
+pytest>=7.3.0
+httpx>=0.24.0  # Para testes de API
+
+# Deploy
+gunicorn>=20.1.0  # Para produção
