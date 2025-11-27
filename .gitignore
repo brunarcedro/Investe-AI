@@ -224,3 +224,18 @@ RESUMO_*.md
 STATUS_*.md
 TUDO_*.md
 docs/markdown/
+docs/latex/
+
+# Arquivos de limpeza e documentação temporária
+LIMPEZA_*.md
+*_DEFINITIVA.md
+ALINHAMENTO_*.md
+CORRECAO_*.md
+INTEGRACAO_*.md
+MODELOS_*.md
+README_ORGANIZACAO.md
+RESULTADO_*.md
+*.txt
+
+# Scripts de desenvolvimento não essenciais
+nul

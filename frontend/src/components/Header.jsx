@@ -18,25 +18,25 @@ export default function Header() {
     <motion.header
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="sticky top-0 z-50 backdrop-blur-xl bg-dark-bg/80 border-b border-dark-border"
+      className="sticky top-0 z-50 backdrop-blur-xl bg-white/90 border-b-2 border-[#FFA3FF]/20 shadow-sm"
     >
       <nav className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
+          {/* Logo Breno */}
           <Link to="/" className="flex items-center space-x-3 group">
             <motion.div
               whileHover={{ scale: 1.05 }}
               className="flex items-center space-x-2"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-fintech flex items-center justify-center shadow-glow">
-                <span className="text-xl">💎</span>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FFA3FF] to-[#FF6EC7] flex items-center justify-center shadow-lg text-white font-black">
+                B
               </div>
               <div>
-                <div className="text-xl font-bold bg-gradient-to-r from-primary to-gradient-cyan bg-clip-text text-transparent">
-                  Investe-AI
+                <div className="text-xl font-black text-[#004543]">
+                  Breno
                 </div>
-                <div className="text-xs text-dark-muted -mt-1">
-                  Powered by AI
+                <div className="text-xs text-gray-600 -mt-1">
+                  IA de Investimentos
                 </div>
               </div>
             </motion.div>
@@ -49,12 +49,12 @@ export default function Header() {
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                  className={`px-4 py-2 rounded-full font-bold transition-all duration-300 ${
                     item.highlight
-                      ? 'bg-gradient-fintech text-white shadow-glow'
+                      ? 'bg-gradient-to-r from-[#FFA3FF] to-[#FF6EC7] text-white shadow-md'
                       : isActive(item.path)
-                      ? 'bg-dark-card text-primary border border-primary/30'
-                      : 'text-dark-muted hover:text-dark-text hover:bg-dark-card'
+                      ? 'bg-[#FFF5F8] text-[#FFA3FF] border-2 border-[#FFA3FF]'
+                      : 'text-gray-600 hover:text-[#004543] hover:bg-[#FFF5F8]'
                   }`}
                 >
                   <span className="mr-2">{item.icon}</span>
@@ -67,10 +67,10 @@ export default function Header() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-dark-card transition-colors"
+            className="md:hidden p-2 rounded-lg hover:bg-[#FFF5F8] transition-colors"
           >
             <svg
-              className="w-6 h-6 text-dark-text"
+              className="w-6 h-6 text-[#004543]"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -93,7 +93,7 @@ export default function Header() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="md:hidden py-4 border-t border-dark-border"
+            className="md:hidden py-4 border-t-2 border-[#FFA3FF]/20"
           >
             <div className="flex flex-col space-y-2">
               {navItems.map((item) => (
@@ -103,12 +103,12 @@ export default function Header() {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <div
-                    className={`px-4 py-3 rounded-lg font-medium transition-all ${
+                    className={`px-4 py-3 rounded-full font-bold transition-all ${
                       item.highlight
-                        ? 'bg-gradient-fintech text-white'
+                        ? 'bg-gradient-to-r from-[#FFA3FF] to-[#FF6EC7] text-white'
                         : isActive(item.path)
-                        ? 'bg-dark-card text-primary border border-primary/30'
-                        : 'text-dark-muted hover:text-dark-text hover:bg-dark-card'
+                        ? 'bg-[#FFF5F8] text-[#FFA3FF] border-2 border-[#FFA3FF]'
+                        : 'text-gray-600 hover:text-[#004543] hover:bg-[#FFF5F8]'
                     }`}
                   >
                     <span className="mr-2">{item.icon}</span>

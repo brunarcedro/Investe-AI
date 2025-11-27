@@ -2,70 +2,80 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 @layer base {
   * {
-    @apply border-dark-border;
+    @apply border-academic-border;
   }
 
   body {
-    @apply bg-dark-bg text-dark-text;
+    @apply bg-academic-bg text-academic-text;
     font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Scrollbar Dark Theme */
+  /* Scrollbar Clean Theme */
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-dark-bg;
+    @apply bg-academic-bg-secondary;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-dark-border rounded-lg;
+    @apply bg-academic-border-strong rounded;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-dark-hover;
+    @apply bg-primary-light;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-academic-text font-bold;
   }
 }
 
 @layer components {
-  /* Glass Card Effect */
-  .glass-card {
-    @apply bg-dark-card/50 backdrop-blur-xl border border-dark-border rounded-2xl;
+  /* Academic Card */
+  .card-academic {
+    @apply bg-white border border-academic-border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200;
   }
 
-  /* Premium Button */
-  .btn-premium {
-    @apply bg-gradient-fintech text-white font-semibold px-6 py-3 rounded-xl
-           shadow-glow hover:shadow-glow-success transition-all duration-300
-           transform hover:scale-105;
+  /* Primary Button */
+  .btn-primary {
+    @apply bg-primary text-white font-semibold px-6 py-3 rounded-lg
+           hover:bg-primary-dark transition-colors duration-200;
   }
 
-  /* Card with Hover Effect */
-  .card-hover {
-    @apply bg-dark-card border border-dark-border rounded-xl p-6
-           transition-all duration-300 hover:border-primary hover:shadow-glow;
+  /* Secondary Button */
+  .btn-secondary {
+    @apply bg-white border-2 border-primary text-primary font-semibold px-6 py-3 rounded-lg
+           hover:bg-primary-50 transition-colors duration-200;
   }
 
-  /* Input Dark Theme */
-  .input-dark {
-    @apply bg-dark-card border border-dark-border text-dark-text px-4 py-3 rounded-lg
-           focus:border-primary focus:ring-2 focus:ring-primary/50 focus:outline-none
+  /* Input Clean */
+  .input-clean {
+    @apply bg-white border border-academic-border text-academic-text px-4 py-3 rounded-lg
+           focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none
            transition-all duration-200;
   }
 
-  /* Tooltip */
-  .tooltip {
-    @apply absolute z-50 px-3 py-2 text-sm bg-dark-hover border border-dark-border
-           rounded-lg shadow-premium invisible opacity-0 transition-all duration-200;
+  /* Section Title */
+  .section-title {
+    @apply text-2xl md:text-3xl font-bold text-academic-text mb-4;
   }
 
-  .tooltip-trigger:hover .tooltip {
-    @apply visible opacity-100;
+  /* Subsection Title */
+  .subsection-title {
+    @apply text-xl font-semibold text-academic-text mb-3;
+  }
+
+  /* Text Muted */
+  .text-muted {
+    @apply text-academic-text-muted;
   }
 }

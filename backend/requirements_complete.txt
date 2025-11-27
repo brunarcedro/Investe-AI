@@ -1,5 +1,5 @@
 # Requirements completos para o projeto Investe-AI
-# Todas as bibliotecas necessárias para o modelo ultimate
+# Todas as bibliotecas necessárias
 
 # Core ML
 numpy>=1.21.0

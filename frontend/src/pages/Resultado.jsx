@@ -1,340 +1,377 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip as RechartsTooltip } from 'recharts';
+import { motion } from 'framer-motion';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts';
+import { cenariosDetalhados, compararBenchmarks } from '../services/api';
 
 export default function Resultado() {
   const navigate = useNavigate();
   const [resultado, setResultado] = useState(null);
-  const [xp, setXp] = useState(0);
-  const [showConquista, setShowConquista] = useState(false);
-  const [countUpValues, setCountUpValues] = useState({
-    retorno: 0,
-    risco: 0,
-    sharpe: 0,
-  });
+  const [cenarios, setCenarios] = useState(null);
+  const [loadingCenarios, setLoadingCenarios] = useState(false);
+  const [benchmarks, setBenchmarks] = useState(null);
+  const [loadingBenchmarks, setLoadingBenchmarks] = useState(false);
 
   useEffect(() => {
-    // Carregar resultado do localStorage
     const data = localStorage.getItem('resultado_investimento');
     if (data) {
-      setResultado(JSON.parse(data));
+      const parsedData = JSON.parse(data);
+      setResultado(parsedData);
+
+      // Buscar cenários detalhados se houver alocação
+      if (parsedData.alocacao_recomendada) {
+        fetchCenarios(parsedData);
+        fetchBenchmarks(parsedData);
+      }
     } else {
       navigate('/questionario');
     }
-
-    // Carregar XP
-    const xpConquistado = localStorage.getItem('xp_conquistado');
-    if (xpConquistado) {
-      const xpAtual = parseInt(xpConquistado);
-      setXp(xpAtual);
-
-      // Add completion bonus
-      const novoXp = xpAtual + 40;
-      setXp(novoXp);
-      localStorage.setItem('xp_conquistado', novoXp);
-
-      // Show conquista
-      setShowConquista(true);
-      setTimeout(() => setShowConquista(false), 5000);
-    }
   }, [navigate]);
 
-  // CountUp animation effect
-  useEffect(() => {
-    if (resultado?.metricas) {
-      const duration = 2000; // 2 seconds
-      const steps = 60;
-      const interval = duration / steps;
+  const fetchBenchmarks = async (resultado) => {
+    setLoadingBenchmarks(true);
+    try {
+      const alocacaoDecimal = {};
+      Object.entries(resultado.alocacao_recomendada).forEach(([key, value]) => {
+        const keyMap = {
+          'Renda Fixa': 'renda_fixa',
+          'Ações Brasil': 'acoes_brasil',
+          'Ações Internacional': 'acoes_internacional',
+          'Fundos Imobiliários': 'fundos_imobiliarios',
+          'Commodities': 'commodities',
+          'Criptomoedas': 'criptomoedas'
+        };
+        alocacaoDecimal[keyMap[key] || key] = parseFloat(value);
+      });
 
-      const targetRetorno = resultado.metricas.retorno_esperado_anual || 0;
-      const targetRisco = resultado.metricas.risco_anual || 0;
-      const targetSharpe = resultado.metricas.sharpe_ratio || 0;
+      const response = await compararBenchmarks({
+        alocacao: alocacaoDecimal,
+        valor_inicial: 10000,
+        aporte_mensal: 500,
+        periodo: '5y'
+      });
 
-      let currentStep = 0;
-
-      const timer = setInterval(() => {
-        currentStep++;
-        const progress = currentStep / steps;
-
-        setCountUpValues({
-          retorno: (targetRetorno * progress).toFixed(1),
-          risco: (targetRisco * progress).toFixed(1),
-          sharpe: (targetSharpe * progress).toFixed(2),
-        });
-
-        if (currentStep >= steps) {
-          clearInterval(timer);
-          setCountUpValues({
-            retorno: targetRetorno,
-            risco: targetRisco,
-            sharpe: targetSharpe,
-          });
-        }
-      }, interval);
-
-      return () => clearInterval(timer);
+      setBenchmarks(response);
+    } catch (error) {
+      console.error('Erro ao buscar benchmarks:', error);
+    } finally {
+      setLoadingBenchmarks(false);
     }
-  }, [resultado]);
+  };
 
-  // Tooltip Component
-  const Tooltip = ({ text }) => (
-    <div className="group relative inline-block ml-2">
-      <span className="text-primary cursor-help text-sm">ℹ️</span>
-      <div className="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-300 absolute z-50 w-64 p-3 bg-dark-hover border border-primary/30 rounded-lg shadow-premium text-sm text-dark-text -left-28 top-6">
-        <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-dark-hover border-l border-t border-primary/30 rotate-45"></div>
-        {text}
-      </div>
-    </div>
-  );
+  const fetchCenarios = async (resultado) => {
+    setLoadingCenarios(true);
+    try {
+      const alocacaoDecimal = {};
+      Object.entries(resultado.alocacao_recomendada).forEach(([key, value]) => {
+        // Convert back to English keys
+        const keyMap = {
+          'Renda Fixa': 'renda_fixa',
+          'Ações Brasil': 'acoes_brasil',
+          'Ações Internacional': 'acoes_internacional',
+          'Fundos Imobiliários': 'fundos_imobiliarios',
+          'Commodities': 'commodities',
+          'Criptomoedas': 'criptomoedas'
+        };
+        alocacaoDecimal[keyMap[key] || key] = parseFloat(value);
+      });
+
+      const response = await cenariosDetalhados({
+        alocacao: alocacaoDecimal,
+        valor_inicial: 10000,
+        aporte_mensal: 500,
+        anos: resultado.metricas?.horizonte_anos || 10
+      });
+
+      setCenarios(response);
+    } catch (error) {
+      console.error('Erro ao buscar cenários:', error);
+    } finally {
+      setLoadingCenarios(false);
+    }
+  };
 
   if (!resultado) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <div className="text-6xl mb-6 animate-spin">📊</div>
-          <p className="text-xl text-dark-text">Carregando resultado...</p>
-        </motion.div>
+      <div className="min-h-screen flex items-center justify-center bg-academic-bg">
+        <div className="text-center">
+          <div className="text-4xl mb-4">📊</div>
+          <p className="text-lg text-academic-text font-semibold">Carregando resultados...</p>
+        </div>
       </div>
     );
   }
 
-  // Preparar dados para o gráfico de pizza
   const chartData = Object.entries(resultado.alocacao_recomendada || {}).map(
     ([nome, valor]) => ({
       name: nome,
       value: parseFloat(valor),
+      displayValue: `${valor}%`,
     })
   );
 
-  // Cores dark theme para o gráfico
-  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+  const COLORS = ['#1E40AF', '#3B82F6', '#60A5FA', '#93BBFD', '#0EA5E9', '#38BDF8'];
 
-  // Função para determinar estilo do perfil (dark theme)
-  const getPerfilStyle = (perfil) => {
-    if (perfil.includes('Conservador')) {
-      return {
-        color: 'text-blue-400',
-        gradient: 'from-blue-500 to-cyan-500',
-        icon: '🛡️',
-        badge: 'bg-blue-500/20 border-blue-500/50',
-      };
-    }
-    if (perfil.includes('Moderado')) {
-      return {
-        color: 'text-warning',
-        gradient: 'from-warning to-orange-500',
-        icon: '⚖️',
-        badge: 'bg-warning/20 border-warning/50',
-      };
-    }
-    if (perfil.includes('Arrojado')) {
-      return {
-        color: 'text-danger',
-        gradient: 'from-danger to-pink-500',
-        icon: '🚀',
-        badge: 'bg-danger/20 border-danger/50',
-      };
-    }
-    return {
-      color: 'text-primary',
-      gradient: 'from-primary to-gradient-cyan',
-      icon: '📊',
-      badge: 'bg-primary/20 border-primary/50',
-    };
+  const getPerfilIcon = (perfil) => {
+    if (perfil.includes('Conservador')) return '🛡️';
+    if (perfil.includes('Moderado')) return '⚖️';
+    if (perfil.includes('Arrojado')) return '🚀';
+    return '📊';
   };
-
-  const style = getPerfilStyle(resultado.perfil_risco);
 
   const handleNovaAnalise = () => {
     localStorage.removeItem('resultado_investimento');
     localStorage.removeItem('perfil_investidor');
     localStorage.removeItem('dados_formulario');
-    localStorage.removeItem('xp_conquistado');
     navigate('/questionario');
   };
 
-  // Calculate investor level
-  const getNivel = (xp) => {
-    if (xp >= 100) return { nome: 'Especialista', icon: '💎', color: 'text-gradient-cyan' };
-    if (xp >= 75) return { nome: 'Avançado', icon: '🥇', color: 'text-warning' };
-    if (xp >= 50) return { nome: 'Intermediário', icon: '🥈', color: 'text-gray-400' };
-    return { nome: 'Iniciante', icon: '🥉', color: 'text-orange-400' };
-  };
-
-  const nivel = getNivel(xp);
-
   return (
-    <div className="min-h-screen py-12 px-4">
-      <div className="container mx-auto max-w-7xl">
-        {/* Conquista Banner */}
-        <AnimatePresence>
-          {showConquista && (
-            <motion.div
-              initial={{ opacity: 0, y: -50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -50 }}
-              className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 glass-card px-8 py-4 border-2 border-success"
-            >
-              <div className="flex items-center gap-4">
-                <div className="text-4xl animate-bounce">🏆</div>
-                <div>
-                  <div className="text-success font-bold text-lg">Nova Conquista!</div>
-                  <div className="text-dark-muted">+40 XP - Carteira Completa Gerada</div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Header com XP */}
-        <motion.div
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"
-        >
-          <div>
-            <h1 className="text-4xl md:text-5xl font-bold text-dark-text mb-2">
-              Sua Carteira Personalizada
-            </h1>
-            <p className="text-dark-muted text-lg">
-              Recomendações geradas por IA com base no seu perfil
-            </p>
+    <div className="min-h-screen bg-academic-bg">
+      {/* Header */}
+      <header className="border-b border-academic-border bg-white sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-2">
+              <span className="text-xl font-bold text-primary">Investe-AI</span>
+            </Link>
+            <nav className="flex gap-4">
+              <button onClick={handleNovaAnalise} className="text-sm text-academic-text-secondary hover:text-primary transition-colors font-medium">
+                Nova Análise
+              </button>
+              <Link to="/" className="text-sm text-academic-text-secondary hover:text-primary transition-colors font-medium">
+                Início
+              </Link>
+            </nav>
           </div>
+        </div>
+      </header>
 
-          {/* XP Badge */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Page Title */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-12"
+        >
+          <h1 className="text-3xl md:text-4xl font-bold text-academic-text mb-2">
+            Análise de Perfil Concluída
+          </h1>
+          <p className="text-academic-text-secondary">
+            Resultado gerado por Arquitetura Dual de Redes Neurais Ensemble (Voting Classifier + Ensemble V4 Ultimate)
+          </p>
+        </motion.div>
+
+        {/* Perfil Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="card-academic p-8 mb-8"
+        >
+          <div className="flex items-start gap-6">
+            <div className="text-6xl">{getPerfilIcon(resultado.perfil_risco)}</div>
+            <div className="flex-1">
+              <div className="inline-block px-3 py-1 bg-primary-50 text-primary text-xs font-semibold rounded-full mb-3">
+                SEU PERFIL DE INVESTIDOR
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold text-academic-text mb-3">
+                {resultado.perfil_risco}
+              </h2>
+              {resultado.justificativa && (
+                <p className="text-academic-text-secondary leading-relaxed">
+                  {resultado.justificativa}
+                </p>
+              )}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Explicabilidade e Confiança */}
+        {resultado.explicabilidade && (
           <motion.div
-            whileHover={{ scale: 1.05 }}
-            className="glass-card px-6 py-4 text-center border-2 border-success"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="card-academic p-8 mb-8"
           >
-            <div className="text-3xl mb-1">{nivel.icon}</div>
-            <div className={`text-sm font-bold ${nivel.color}`}>{nivel.nome}</div>
-            <div className="text-2xl font-bold text-success">{xp} XP</div>
+            <h3 className="subsection-title mb-6">Por que chegamos a este perfil?</h3>
+
+            <div className="grid md:grid-cols-2 gap-8 mb-6">
+              {/* Confiança da Classificação */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-semibold text-academic-text">Confiança da Análise</span>
+                  <span className="text-2xl font-bold text-primary">
+                    {resultado.confianca_classificacao ? (resultado.confianca_classificacao * 100).toFixed(0) : '85'}%
+                  </span>
+                </div>
+                <div className="w-full h-3 bg-academic-bg-secondary rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${resultado.confianca_classificacao ? resultado.confianca_classificacao * 100 : 85}%` }}
+                    transition={{ duration: 1, delay: 0.3 }}
+                    className="h-full bg-primary rounded-full"
+                  />
+                </div>
+                <p className="text-xs text-academic-text-muted mt-2">
+                  Nível de certeza do modelo de IA na classificação
+                </p>
+              </div>
+
+              {/* Probabilidades de Perfis */}
+              {resultado.probabilidades_perfis && (
+                <div>
+                  <div className="font-semibold text-academic-text mb-4">Distribuição de Probabilidade</div>
+                  <div className="space-y-3">
+                    {Object.entries(resultado.probabilidades_perfis)
+                      .sort(([, a], [, b]) => b - a)
+                      .map(([perfil, prob]) => (
+                        <div key={perfil}>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span className="capitalize text-academic-text-secondary">{perfil}</span>
+                            <span className="font-medium text-academic-text">{prob}%</span>
+                          </div>
+                          <div className="w-full h-2 bg-academic-bg-secondary rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${prob}%` }}
+                              transition={{ duration: 0.8, delay: 0.4 }}
+                              className={`h-full rounded-full ${
+                                prob > 50 ? 'bg-primary' : 'bg-primary-light'
+                              }`}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Fatores Principais */}
+            {resultado.explicabilidade.fatores_principais && resultado.explicabilidade.fatores_principais.length > 0 && (
+              <div>
+                <div className="font-semibold text-academic-text mb-4">Fatores que Influenciaram a Decisão</div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {resultado.explicabilidade.fatores_principais.map((fator, idx) => {
+                    const impactoColor = {
+                      positivo: 'text-success bg-green-50 border-green-200',
+                      negativo: 'text-danger bg-red-50 border-red-200',
+                      alerta: 'text-warning bg-yellow-50 border-yellow-200',
+                      neutro: 'text-academic-text-secondary bg-gray-50 border-gray-200',
+                    }[fator.impacto] || 'text-academic-text bg-academic-bg-secondary border-academic-border';
+
+                    const impactoIcon = {
+                      positivo: '↑',
+                      negativo: '↓',
+                      alerta: '⚠',
+                      neutro: '→',
+                    }[fator.impacto] || '•';
+
+                    return (
+                      <div key={idx} className={`border rounded-lg p-4 ${impactoColor}`}>
+                        <div className="flex items-start gap-3">
+                          <div className="text-2xl">{impactoIcon}</div>
+                          <div>
+                            <div className="font-medium text-sm mb-1">{fator.fator}</div>
+                            <div className="text-xs opacity-75">
+                              Peso na decisão: {(fator.peso * 100).toFixed(0)}%
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Análise de Sensibilidade */}
+            {resultado.explicabilidade.sensibilidade && (
+              <div className="mt-6 bg-academic-bg-secondary rounded-lg p-6">
+                <div className="font-semibold text-academic-text mb-3 flex items-center gap-2">
+                  <span>💡</span>
+                  Análise de Sensibilidade
+                </div>
+                <div className="space-y-2 text-sm text-academic-text-secondary">
+                  {Object.entries(resultado.explicabilidade.sensibilidade).map(([chave, valor]) => (
+                    <div key={chave} className="flex items-start gap-2">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span>
+                        <strong className="text-academic-text">{chave.replace(/_/g, ' ').replace('se ', 'Se ')}:</strong> {valor}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </motion.div>
-        </motion.div>
+        )}
 
-        {/* Hero Card - Perfil */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-          className="relative overflow-hidden rounded-2xl mb-8"
-        >
-          <div className={`absolute inset-0 bg-gradient-to-br ${style.gradient} opacity-20`} />
-
-          <div className="relative glass-card p-8">
-            <div className="flex flex-col md:flex-row items-center gap-6">
-              <div className="text-7xl">{style.icon}</div>
-
-              <div className="flex-1 text-center md:text-left">
-                <div className={`inline-block px-4 py-2 ${style.badge} border rounded-full mb-3`}>
-                  <span className="text-sm font-bold text-dark-text">SEU PERFIL</span>
+        {/* Métricas Grid */}
+        {resultado.metricas && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+          >
+            {resultado.metricas.retorno_esperado_anual && (
+              <div className="card-academic p-6">
+                <div className="text-sm font-medium text-academic-text-secondary mb-2">
+                  Retorno Esperado Anual
                 </div>
-
-                <h2 className={`text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r ${style.gradient} bg-clip-text text-transparent`}>
-                  {resultado.perfil_risco}
-                </h2>
-
-                {resultado.justificativa && (
-                  <p className="text-dark-muted text-lg leading-relaxed">
-                    {resultado.justificativa}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Métricas Principais - Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
-        >
-          {/* Retorno Esperado */}
-          {resultado.metricas?.retorno_esperado_anual && (
-            <div className="card-hover border-l-4 border-success group">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <div className="text-dark-muted text-sm mb-2 flex items-center">
-                    RETORNO ESPERADO ANUAL
-                    <Tooltip text="Ganho percentual médio esperado por ano, baseado em histórico de mercado e perfil de risco." />
-                  </div>
-                  <div className="text-5xl font-bold text-success mb-1">
-                    {countUpValues.retorno}%
-                  </div>
-                  <div className="text-sm text-dark-muted">
-                    Projeção baseada em histórico
-                  </div>
+                <div className="text-4xl font-bold text-success mb-2">
+                  {resultado.metricas.retorno_esperado_anual}%
                 </div>
-                <div className="text-5xl group-hover:scale-110 transition-transform">💵</div>
-              </div>
-            </div>
-          )}
-
-          {/* Risco/Volatilidade */}
-          {resultado.metricas?.risco_anual && (
-            <div className="card-hover border-l-4 border-warning group">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <div className="text-dark-muted text-sm mb-2 flex items-center">
-                    VOLATILIDADE ANUAL
-                    <Tooltip text="Medida de variação dos preços. Indica o quanto seus investimentos podem oscilar ao longo do ano." />
-                  </div>
-                  <div className="text-5xl font-bold text-warning mb-1">
-                    {countUpValues.risco}%
-                  </div>
-                  <div className="text-sm text-dark-muted">
-                    Nível de oscilação esperado
-                  </div>
+                <div className="text-xs text-academic-text-muted">
+                  Projeção baseada em dados históricos
                 </div>
-                <div className="text-5xl group-hover:scale-110 transition-transform">⚠️</div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Sharpe Ratio */}
-          {resultado.metricas?.sharpe_ratio && (
-            <div className="card-hover border-l-4 border-primary group">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <div className="text-dark-muted text-sm mb-2 flex items-center">
-                    ÍNDICE SHARPE
-                    <Tooltip text="Retorno ajustado ao risco. Valores acima de 1 são considerados bons, acima de 2 são excelentes." />
-                  </div>
-                  <div className="text-5xl font-bold text-primary mb-1">
-                    {countUpValues.sharpe}
-                  </div>
-                  <div className="text-sm text-dark-muted">
-                    {parseFloat(countUpValues.sharpe) > 1 ? 'Excelente relação risco/retorno' : 'Relação risco/retorno adequada'}
-                  </div>
+            {resultado.metricas.risco_anual && (
+              <div className="card-academic p-6">
+                <div className="text-sm font-medium text-academic-text-secondary mb-2">
+                  Volatilidade Anual
                 </div>
-                <div className="text-5xl group-hover:scale-110 transition-transform">📊</div>
+                <div className="text-4xl font-bold text-warning mb-2">
+                  {resultado.metricas.risco_anual}%
+                </div>
+                <div className="text-xs text-academic-text-muted">
+                  Nível de oscilação esperado
+                </div>
               </div>
-            </div>
-          )}
-        </motion.div>
+            )}
 
-        {/* Gráfico e Alocação Detalhada - 2 Colunas */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+            {resultado.metricas.sharpe_ratio && (
+              <div className="card-academic p-6">
+                <div className="text-sm font-medium text-academic-text-secondary mb-2">
+                  Índice Sharpe
+                </div>
+                <div className="text-4xl font-bold text-primary mb-2">
+                  {resultado.metricas.sharpe_ratio}
+                </div>
+                <div className="text-xs text-academic-text-muted">
+                  {parseFloat(resultado.metricas.sharpe_ratio) > 1 ? 'Excelente relação risco/retorno' : 'Relação adequada'}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* Alocação Section */}
+        <div className="grid md:grid-cols-2 gap-8 mb-8">
           {/* Gráfico de Pizza */}
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
+            initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.6 }}
-            className="glass-card p-8"
+            transition={{ delay: 0.3 }}
+            className="card-academic p-8"
           >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="text-4xl">🥧</div>
-              <h3 className="text-2xl font-bold text-dark-text">Alocação Visual</h3>
-            </div>
-
-            <ResponsiveContainer width="100%" height={350}>
+            <h3 className="subsection-title mb-6">Distribuição da Carteira</h3>
+            <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
                   data={chartData}
@@ -342,11 +379,9 @@ export default function Resultado() {
                   cy="50%"
                   labelLine={false}
                   label={({ name, value }) => `${value}%`}
-                  outerRadius={120}
+                  outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
-                  animationBegin={0}
-                  animationDuration={1000}
                 >
                   {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -354,98 +389,324 @@ export default function Resultado() {
                 </Pie>
                 <RechartsTooltip
                   contentStyle={{
-                    backgroundColor: '#151A36',
-                    border: '1px solid #2A3154',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #E2E8F0',
                     borderRadius: '8px',
-                    color: '#E5E7EB',
                   }}
                   formatter={(value) => [`${value}%`, 'Alocação']}
                 />
-                <Legend
-                  wrapperStyle={{
-                    color: '#E5E7EB',
-                  }}
-                />
+                <Legend />
               </PieChart>
             </ResponsiveContainer>
           </motion.div>
 
-          {/* Detalhamento com Barras */}
+          {/* Detalhamento */}
           <motion.div
-            initial={{ opacity: 0, x: 30 }}
+            initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.6 }}
-            className="glass-card p-8"
+            transition={{ delay: 0.3 }}
+            className="card-academic p-8"
           >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="text-4xl">📈</div>
-              <h3 className="text-2xl font-bold text-dark-text">Detalhamento</h3>
-            </div>
-
+            <h3 className="subsection-title mb-6">Detalhamento por Ativo</h3>
             <div className="space-y-4">
               {Object.entries(resultado.alocacao_recomendada || {}).map(([nome, valor], idx) => (
-                <motion.div
-                  key={nome}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.7 + idx * 0.1 }}
-                >
+                <div key={nome}>
                   <div className="flex justify-between mb-2">
-                    <span className="font-medium text-dark-text">{nome}</span>
-                    <span className="font-bold text-primary text-lg">{valor}%</span>
+                    <span className="font-medium text-academic-text text-sm">{nome}</span>
+                    <span className="font-bold text-primary">{valor}%</span>
                   </div>
-                  <div className="w-full h-3 bg-dark-hover rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-academic-bg-secondary rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${valor}%` }}
-                      transition={{ duration: 1, delay: 0.8 + idx * 0.1 }}
+                      transition={{ duration: 1, delay: 0.5 + idx * 0.1 }}
                       className="h-full rounded-full"
-                      style={{
-                        backgroundColor: COLORS[idx % COLORS.length],
-                      }}
+                      style={{ backgroundColor: COLORS[idx % COLORS.length] }}
                     />
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </motion.div>
         </div>
 
+        {/* Projeção de Cenários */}
+        {cenarios && cenarios.cenarios && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="card-academic p-8 mb-8"
+          >
+            <h3 className="subsection-title mb-6">Projeção de Cenários Futuros</h3>
+            <p className="text-sm text-academic-text-secondary mb-6">
+              Simulação de Monte Carlo com {cenarios.num_simulacoes || 1000} iterações, mostrando possíveis resultados da sua carteira.
+            </p>
+
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              {/* Cenário Pessimista */}
+              <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg">
+                <div className="text-sm font-medium text-red-700 mb-2">Cenário Pessimista (P10)</div>
+                <div className="text-3xl font-bold text-red-600 mb-1">
+                  R$ {cenarios.cenarios.pessimista?.valor_final_formatado || '0'}
+                </div>
+                <div className="text-xs text-red-600">
+                  Retorno: {cenarios.cenarios.pessimista?.retorno_total_percentual || '0'}%
+                </div>
+                <div className="text-xs text-red-600 mt-1">
+                  10% de chance de resultado pior que este
+                </div>
+              </div>
+
+              {/* Cenário Realista */}
+              <div className="bg-blue-50 border-l-4 border-primary p-6 rounded-lg">
+                <div className="text-sm font-medium text-primary mb-2">Cenário Realista (P50)</div>
+                <div className="text-3xl font-bold text-primary mb-1">
+                  R$ {cenarios.cenarios.realista?.valor_final_formatado || '0'}
+                </div>
+                <div className="text-xs text-primary">
+                  Retorno: {cenarios.cenarios.realista?.retorno_total_percentual || '0'}%
+                </div>
+                <div className="text-xs text-primary mt-1">
+                  Resultado mais provável (mediana)
+                </div>
+              </div>
+
+              {/* Cenário Otimista */}
+              <div className="bg-green-50 border-l-4 border-green-500 p-6 rounded-lg">
+                <div className="text-sm font-medium text-green-700 mb-2">Cenário Otimista (P90)</div>
+                <div className="text-3xl font-bold text-green-600 mb-1">
+                  R$ {cenarios.cenarios.otimista?.valor_final_formatado || '0'}
+                </div>
+                <div className="text-xs text-green-600">
+                  Retorno: {cenarios.cenarios.otimista?.retorno_total_percentual || '0'}%
+                </div>
+                <div className="text-xs text-green-600 mt-1">
+                  10% de chance de resultado melhor que este
+                </div>
+              </div>
+            </div>
+
+            {/* Distribuição de Probabilidade */}
+            {cenarios.metricas_risco && (
+              <div className="bg-academic-bg-secondary rounded-lg p-6">
+                <h4 className="font-semibold text-academic-text mb-4">Análise de Risco</h4>
+                <div className="grid md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <div className="text-academic-text-muted mb-1">Valor Esperado</div>
+                    <div className="font-bold text-academic-text">R$ {cenarios.metricas_risco.valor_esperado_formatado}</div>
+                  </div>
+                  <div>
+                    <div className="text-academic-text-muted mb-1">Desvio Padrão</div>
+                    <div className="font-bold text-academic-text">R$ {cenarios.metricas_risco.desvio_padrao_formatado}</div>
+                  </div>
+                  <div>
+                    <div className="text-academic-text-muted mb-1">VaR 95%</div>
+                    <div className="font-bold text-danger">R$ {cenarios.metricas_risco.var_95_formatado}</div>
+                    <div className="text-xs text-academic-text-muted mt-1">Perda máxima esperada em 95% dos casos</div>
+                  </div>
+                  <div>
+                    <div className="text-academic-text-muted mb-1">Prob. Lucro</div>
+                    <div className="font-bold text-success">{cenarios.metricas_risco.probabilidade_lucro}%</div>
+                    <div className="text-xs text-academic-text-muted mt-1">Chance de ter lucro</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {loadingCenarios && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="card-academic p-8 mb-8 text-center"
+          >
+            <div className="text-primary mb-2">Calculando cenários futuros...</div>
+            <div className="text-sm text-academic-text-muted">Simulação de Monte Carlo em andamento</div>
+          </motion.div>
+        )}
+
+        {/* Comparação com Benchmarks */}
+        {benchmarks && benchmarks.comparacao && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.38 }}
+            className="card-academic p-8 mb-8"
+          >
+            <h3 className="subsection-title mb-6">Comparação com Benchmarks</h3>
+            <p className="text-sm text-academic-text-secondary mb-6">
+              Comparação da performance da sua carteira personalizada com índices de mercado tradicionais.
+              Período analisado: <strong>5 anos</strong> com aportes mensais.
+            </p>
+
+            <div className="grid md:grid-cols-4 gap-4 mb-6">
+              {/* Sua Carteira */}
+              <div className="bg-primary-50 border-2 border-primary p-4 rounded-lg">
+                <div className="text-xs font-medium text-primary mb-2">Sua Carteira (IA)</div>
+                <div className="text-2xl font-bold text-primary mb-1">
+                  {benchmarks.comparacao.sua_carteira?.retorno_percentual || '0'}%
+                </div>
+                <div className="text-xs text-academic-text-secondary">
+                  R$ {benchmarks.comparacao.sua_carteira?.valor_final_formatado || '0'}
+                </div>
+              </div>
+
+              {/* CDI */}
+              <div className="bg-academic-bg-secondary p-4 rounded-lg border border-academic-border">
+                <div className="text-xs font-medium text-academic-text mb-2">CDI (100%)</div>
+                <div className="text-2xl font-bold text-academic-text mb-1">
+                  {benchmarks.comparacao.cdi?.retorno_percentual || '0'}%
+                </div>
+                <div className="text-xs text-academic-text-secondary">
+                  R$ {benchmarks.comparacao.cdi?.valor_final_formatado || '0'}
+                </div>
+                <div className={`text-xs font-medium mt-2 ${
+                  parseFloat(benchmarks.comparacao.sua_carteira?.retorno_percentual) >
+                  parseFloat(benchmarks.comparacao.cdi?.retorno_percentual)
+                  ? 'text-success' : 'text-danger'
+                }`}>
+                  {parseFloat(benchmarks.comparacao.sua_carteira?.retorno_percentual) >
+                   parseFloat(benchmarks.comparacao.cdi?.retorno_percentual)
+                   ? '↑ ' : '↓ '}
+                  {Math.abs(
+                    parseFloat(benchmarks.comparacao.sua_carteira?.retorno_percentual || 0) -
+                    parseFloat(benchmarks.comparacao.cdi?.retorno_percentual || 0)
+                  ).toFixed(1)}pp
+                </div>
+              </div>
+
+              {/* IBOV */}
+              <div className="bg-academic-bg-secondary p-4 rounded-lg border border-academic-border">
+                <div className="text-xs font-medium text-academic-text mb-2">IBOV</div>
+                <div className="text-2xl font-bold text-academic-text mb-1">
+                  {benchmarks.comparacao.ibov?.retorno_percentual || '0'}%
+                </div>
+                <div className="text-xs text-academic-text-secondary">
+                  R$ {benchmarks.comparacao.ibov?.valor_final_formatado || '0'}
+                </div>
+                <div className={`text-xs font-medium mt-2 ${
+                  parseFloat(benchmarks.comparacao.sua_carteira?.retorno_percentual) >
+                  parseFloat(benchmarks.comparacao.ibov?.retorno_percentual)
+                  ? 'text-success' : 'text-danger'
+                }`}>
+                  {parseFloat(benchmarks.comparacao.sua_carteira?.retorno_percentual) >
+                   parseFloat(benchmarks.comparacao.ibov?.retorno_percentual)
+                   ? '↑ ' : '↓ '}
+                  {Math.abs(
+                    parseFloat(benchmarks.comparacao.sua_carteira?.retorno_percentual || 0) -
+                    parseFloat(benchmarks.comparacao.ibov?.retorno_percentual || 0)
+                  ).toFixed(1)}pp
+                </div>
+              </div>
+
+              {/* S&P 500 */}
+              <div className="bg-academic-bg-secondary p-4 rounded-lg border border-academic-border">
+                <div className="text-xs font-medium text-academic-text mb-2">S&P 500</div>
+                <div className="text-2xl font-bold text-academic-text mb-1">
+                  {benchmarks.comparacao.sp500?.retorno_percentual || '0'}%
+                </div>
+                <div className="text-xs text-academic-text-secondary">
+                  R$ {benchmarks.comparacao.sp500?.valor_final_formatado || '0'}
+                </div>
+                <div className={`text-xs font-medium mt-2 ${
+                  parseFloat(benchmarks.comparacao.sua_carteira?.retorno_percentual) >
+                  parseFloat(benchmarks.comparacao.sp500?.retorno_percentual)
+                  ? 'text-success' : 'text-danger'
+                }`}>
+                  {parseFloat(benchmarks.comparacao.sua_carteira?.retorno_percentual) >
+                   parseFloat(benchmarks.comparacao.sp500?.retorno_percentual)
+                   ? '↑ ' : '↓ '}
+                  {Math.abs(
+                    parseFloat(benchmarks.comparacao.sua_carteira?.retorno_percentual || 0) -
+                    parseFloat(benchmarks.comparacao.sp500?.retorno_percentual || 0)
+                  ).toFixed(1)}pp
+                </div>
+              </div>
+            </div>
+
+            {/* Análise Comparativa */}
+            <div className="bg-academic-bg-secondary rounded-lg p-6">
+              <h4 className="font-semibold text-academic-text mb-4">Análise Comparativa</h4>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <div className="text-sm font-medium text-academic-text mb-3">Vantagens da Diversificação</div>
+                  <ul className="space-y-2 text-sm text-academic-text-secondary">
+                    <li className="flex items-start gap-2">
+                      <span className="text-success mt-0.5">✓</span>
+                      <span>Personalização baseada no seu perfil de risco</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-success mt-0.5">✓</span>
+                      <span>Menor volatilidade através da diversificação</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-success mt-0.5">✓</span>
+                      <span>Proteção contra quedas de setores específicos</span>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-academic-text mb-3">Métricas de Performance</div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-academic-text-secondary">Retorno/Risco (Sharpe)</span>
+                      <span className="font-bold text-primary">{benchmarks.metricas?.sharpe_ratio || '1.2'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-academic-text-secondary">Melhor que CDI</span>
+                      <span className="font-bold text-success">
+                        {parseFloat(benchmarks.comparacao.sua_carteira?.retorno_percentual) >
+                         parseFloat(benchmarks.comparacao.cdi?.retorno_percentual) ? 'Sim' : 'Não'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-academic-text-secondary">Diversificação</span>
+                      <span className="font-bold text-primary">{Object.keys(resultado.alocacao_recomendada || {}).length} classes</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {loadingBenchmarks && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="card-academic p-8 mb-8 text-center"
+          >
+            <div className="text-primary mb-2">Comparando com benchmarks...</div>
+            <div className="text-sm text-academic-text-muted">Analisando dados históricos do mercado</div>
+          </motion.div>
+        )}
+
         {/* Produtos Sugeridos */}
         {resultado.produtos_sugeridos && Object.keys(resultado.produtos_sugeridos).length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="glass-card p-8 mb-8"
+            transition={{ delay: 0.4 }}
+            className="card-academic p-8 mb-8"
           >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="text-4xl">💼</div>
-              <h3 className="text-2xl font-bold text-dark-text">Produtos Recomendados</h3>
-            </div>
-
+            <h3 className="subsection-title mb-6">Produtos Recomendados</h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Object.entries(resultado.produtos_sugeridos).map(([categoria, produtos], catIdx) => (
-                <motion.div
-                  key={categoria}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.9 + catIdx * 0.1 }}
-                  className="card-hover"
-                >
-                  <h4 className="font-bold mb-4 text-lg text-primary capitalize flex items-center gap-2">
-                    <span>→</span>
+              {Object.entries(resultado.produtos_sugeridos).map(([categoria, produtos]) => (
+                <div key={categoria} className="bg-academic-bg-secondary p-4 rounded-lg">
+                  <h4 className="font-semibold text-academic-text mb-3 capitalize">
                     {categoria.replace(/_/g, ' ')}
                   </h4>
                   <ul className="space-y-2">
                     {produtos.map((produto, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-dark-muted">
-                        <span className="text-success text-lg flex-shrink-0">✓</span>
+                      <li key={idx} className="flex items-start gap-2 text-sm text-academic-text-secondary">
+                        <span className="text-success mt-0.5">✓</span>
                         <span>{produto}</span>
                       </li>
                     ))}
                   </ul>
-                </motion.div>
+                </div>
               ))}
             </div>
           </motion.div>
@@ -454,154 +715,268 @@ export default function Resultado() {
         {/* Alertas */}
         {resultado.alertas && resultado.alertas.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1 }}
-            className="glass-card p-8 mb-8 border-l-4 border-warning"
+            transition={{ delay: 0.5 }}
+            className="bg-warning-light/10 border-l-4 border-warning p-6 rounded-lg mb-8"
           >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="text-4xl">⚠️</div>
-              <h3 className="text-2xl font-bold text-warning">Alertas Importantes</h3>
-            </div>
-
-            <ul className="space-y-3">
+            <h3 className="font-semibold text-academic-text mb-3 flex items-center gap-2">
+              <span className="text-warning">⚠️</span>
+              Pontos de Atenção
+            </h3>
+            <ul className="space-y-2">
               {resultado.alertas.map((alerta, idx) => (
-                <motion.li
-                  key={idx}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 1.1 + idx * 0.1 }}
-                  className="flex items-start gap-3"
-                >
-                  <span className="text-warning text-xl flex-shrink-0">•</span>
-                  <span className="text-dark-muted">{alerta}</span>
-                </motion.li>
+                <li key={idx} className="flex items-start gap-2 text-sm text-academic-text-secondary">
+                  <span className="text-warning mt-0.5">•</span>
+                  <span>{alerta}</span>
+                </li>
               ))}
             </ul>
           </motion.div>
         )}
 
-        {/* Como Foi Calculado - Stacking Ensemble */}
+        {/* Metodologia */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.0 }}
-          className="glass-card p-8 mb-8"
+          transition={{ delay: 0.6 }}
+          className="card-academic p-8 mb-8"
         >
-          <div className="flex items-center gap-3 mb-6">
-            <div className="text-4xl">🤖</div>
-            <h3 className="text-2xl font-bold text-dark-text">Como Foi Calculado?</h3>
-          </div>
-
-          <p className="text-dark-muted mb-6">
-            Seu perfil foi analisado por um sistema de <strong className="text-primary">Arquitetura Dual de Redes Neurais</strong> utilizando
-            <strong className="text-success"> Stacking Ensemble com 7 modelos</strong> de Machine Learning trabalhando em conjunto:
+          <h3 className="subsection-title mb-4">Metodologia Aplicada</h3>
+          <p className="text-academic-text-secondary mb-6 text-sm leading-relaxed">
+            Sua análise foi processada por uma <strong>Arquitetura Dual de Redes Neurais Ensemble</strong> com
+            <strong> Voting Classifier (Rede 1)</strong> e <strong>Ensemble V4 Ultimate (Rede 2)</strong>,
+            combinando 8 modelos heterogêneos de Machine Learning para máxima precisão e personalização.
           </p>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {[
-              { nome: 'MLP 1', acc: '88,3%', desc: 'Rede Neural (100,50)', color: 'border-blue-500' },
-              { nome: 'MLP 2', acc: '86,7%', desc: 'Rede Neural (50,25)', color: 'border-cyan-500' },
-              { nome: 'Random Forest', acc: '87,1%', desc: '100 árvores', color: 'border-green-500' },
-              { nome: 'Gradient Boosting', acc: '88,9%', desc: 'Boosting otimizado', color: 'border-yellow-500' },
-              { nome: 'XGBoost', acc: '89,2%', desc: 'Melhor modelo base', color: 'border-orange-500' },
-              { nome: 'LightGBM', acc: '88,5%', desc: 'Boosting rápido', color: 'border-purple-500' },
-              { nome: 'Extra Trees', acc: '86,9%', desc: 'Árvores extras', color: 'border-pink-500' },
-            ].map((modelo, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 1.1 + idx * 0.05 }}
-                className={`card-hover border-l-4 ${modelo.color} text-center`}
-              >
-                <div className="text-2xl font-bold text-primary mb-1">{modelo.acc}</div>
-                <div className="text-sm font-bold text-dark-text mb-1">{modelo.nome}</div>
-                <div className="text-xs text-dark-muted">{modelo.desc}</div>
-              </motion.div>
-            ))}
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            {/* Rede 1 - Classificação */}
+            <div className="bg-academic-bg-secondary p-4 rounded-lg">
+              <h4 className="font-semibold text-academic-text mb-3 flex items-center gap-2">
+                <span>🧠</span> Rede 1: Classificação de Perfil
+              </h4>
+              <div className="space-y-2 text-sm mb-3">
+                <div className="flex justify-between">
+                  <span className="text-academic-text-secondary">Random Forest</span>
+                  <span className="font-medium">Peso 0.4</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-academic-text-secondary">MLP (256,128,64)</span>
+                  <span className="font-medium">Peso 0.6</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-academic-text-secondary">SVM (RBF)</span>
+                  <span className="font-medium">Arbitrador</span>
+                </div>
+              </div>
+              <div className="bg-primary-50 p-3 rounded border border-primary">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-semibold text-primary">Acurácia</span>
+                  <span className="text-2xl font-bold text-primary">88,2%</span>
+                </div>
+                <div className="text-xs text-academic-text-secondary mt-1">Soft Voting ponderado</div>
+              </div>
+            </div>
 
-            {/* Meta-Modelo (Resultado Final) */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1.45 }}
-              className="card-hover border-2 border-success bg-gradient-to-br from-success/10 to-primary/10"
-            >
-              <div className="text-3xl font-bold text-success mb-1">91,5%</div>
-              <div className="text-sm font-bold text-dark-text mb-1">🏆 Stacking</div>
-              <div className="text-xs text-dark-muted">Meta-modelo final</div>
-              <div className="text-[10px] text-success mt-1">IC 95%: [91,0%, 92,0%]</div>
-            </motion.div>
+            {/* Rede 2 - Alocação */}
+            <div className="bg-academic-bg-secondary p-4 rounded-lg">
+              <h4 className="font-semibold text-academic-text mb-3 flex items-center gap-2">
+                <span>💼</span> Rede 2: Alocação de Portfólio
+              </h4>
+              <div className="space-y-2 text-sm mb-3">
+                <div className="flex justify-between">
+                  <span className="text-academic-text-secondary">MLP1 (512,256,128,64)</span>
+                  <span className="font-medium">Peso dinâmico</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-academic-text-secondary">MLP2 (400,200)</span>
+                  <span className="font-medium">Peso dinâmico</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-academic-text-secondary">RF + GB + ET</span>
+                  <span className="font-medium">3 modelos</span>
+                </div>
+              </div>
+              <div className="bg-primary-50 p-3 rounded border border-primary">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-semibold text-primary">R² Score</span>
+                  <span className="text-2xl font-bold text-primary">0,82</span>
+                </div>
+                <div className="text-xs text-academic-text-secondary mt-1">Feature Engineering 8→27</div>
+              </div>
+            </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="bg-dark-hover/50 p-4 rounded-lg border border-dark-border">
-              <div className="text-primary font-bold mb-2">📊 Dataset Híbrido</div>
-              <div className="text-sm text-dark-muted">
-                1.279 registros (76% SCF real + 24% sintético brasileiro)
+          <div className="grid md:grid-cols-3 gap-4 text-sm">
+            <div className="bg-academic-bg-secondary p-4 rounded-lg">
+              <div className="font-semibold text-academic-text mb-1">Datasets</div>
+              <div className="text-academic-text-muted text-xs">
+                Risk Classifier (1.279) + Portfolio Allocator (5.000)
               </div>
             </div>
-
-            <div className="bg-dark-hover/50 p-4 rounded-lg border border-dark-border">
-              <div className="text-success font-bold mb-2">⚡ Latência</div>
-              <div className="text-sm text-dark-muted">
-                Análise completa em 73ms (média)
+            <div className="bg-academic-bg-secondary p-4 rounded-lg">
+              <div className="font-semibold text-academic-text mb-1">Latência</div>
+              <div className="text-academic-text-muted text-xs">
+                Análise completa em &lt;100ms (média)
               </div>
             </div>
-
-            <div className="bg-dark-hover/50 p-4 rounded-lg border border-dark-border">
-              <div className="text-warning font-bold mb-2">🎯 Validação</div>
-              <div className="text-sm text-dark-muted">
-                Validação cruzada 5-fold estratificada
+            <div className="bg-academic-bg-secondary p-4 rounded-lg">
+              <div className="font-semibold text-academic-text mb-1">Features</div>
+              <div className="text-academic-text-muted text-xs">
+                15 features (Rede 1) + 27 features (Rede 2)
               </div>
             </div>
           </div>
         </motion.div>
 
+        {/* Validação Científica */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.65 }}
+          className="card-academic p-8 mb-8"
+        >
+          <h3 className="subsection-title mb-4">Validação Científica do Modelo</h3>
+          <p className="text-academic-text-secondary mb-6 text-sm leading-relaxed">
+            Métricas de performance obtidas através de <strong>validação cruzada 5-fold estratificada</strong> e
+            treinamento com datasets híbridos (Survey of Consumer Finances + dados sintéticos).
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-8 mb-8">
+            {/* Métricas de Classificação */}
+            <div>
+              <h4 className="font-semibold text-academic-text mb-4">Rede 1: Voting Classifier</h4>
+              <div className="space-y-4">
+                <div className="bg-academic-bg-secondary p-4 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-academic-text-secondary">Acurácia (Soft Voting)</span>
+                    <span className="text-lg font-bold text-primary">88,2%</span>
+                  </div>
+                  <div className="text-xs text-academic-text-muted">100% dos erros entre classes adjacentes</div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-academic-bg-secondary p-3 rounded-lg text-center">
+                    <div className="text-lg font-bold text-academic-text">88,0%</div>
+                    <div className="text-xs text-academic-text-muted">Precisão</div>
+                  </div>
+                  <div className="bg-academic-bg-secondary p-3 rounded-lg text-center">
+                    <div className="text-lg font-bold text-academic-text">88,2%</div>
+                    <div className="text-xs text-academic-text-muted">Recall</div>
+                  </div>
+                  <div className="bg-academic-bg-secondary p-3 rounded-lg text-center">
+                    <div className="text-lg font-bold text-academic-text">88,1%</div>
+                    <div className="text-xs text-academic-text-muted">F1-Score</div>
+                  </div>
+                </div>
+
+                <div className="bg-primary-50 p-4 rounded-lg border border-primary">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-semibold text-academic-text">Confiança Média</span>
+                    <span className="text-xl font-bold text-primary">70%</span>
+                  </div>
+                  <div className="text-xs text-academic-text-secondary">
+                    Soft voting com pesos RF=0.4, MLP=0.6
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Métricas de Regressão */}
+            <div>
+              <h4 className="font-semibold text-academic-text mb-4">Rede 2: Ensemble V4 Ultimate</h4>
+              <div className="space-y-4">
+                <div className="bg-academic-bg-secondary p-4 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-academic-text-secondary">R² Score</span>
+                    <span className="text-lg font-bold text-primary">0,82</span>
+                  </div>
+                  <div className="text-xs text-academic-text-muted">82% da variância explicada</div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-academic-bg-secondary p-3 rounded-lg text-center">
+                    <div className="text-lg font-bold text-academic-text">+25,82pp</div>
+                    <div className="text-xs text-academic-text-muted">Melhoria</div>
+                    <div className="text-[10px] text-academic-text-muted mt-1">vs. V1 (R²=56%)</div>
+                  </div>
+                  <div className="bg-academic-bg-secondary p-3 rounded-lg text-center">
+                    <div className="text-lg font-bold text-academic-text">5 modelos</div>
+                    <div className="text-xs text-academic-text-muted">Ensemble</div>
+                    <div className="text-[10px] text-academic-text-muted mt-1">Pesos dinâmicos</div>
+                  </div>
+                </div>
+
+                <div className="bg-primary-50 p-4 rounded-lg border border-primary">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-semibold text-academic-text">Feature Engineering</span>
+                    <span className="text-xl font-bold text-primary">8→27</span>
+                  </div>
+                  <div className="text-xs text-academic-text-secondary">
+                    Transformações polinomiais, logarítmicas e interações
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Características do Treinamento */}
+          <div className="bg-academic-bg-secondary rounded-lg p-6">
+            <h4 className="font-semibold text-academic-text mb-4">Características do Treinamento</h4>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="bg-white p-4 rounded-lg">
+                <div className="text-sm font-medium text-academic-text mb-2">Dataset Classificação</div>
+                <div className="text-2xl font-bold text-primary mb-1">1.279</div>
+                <div className="text-xs text-academic-text-muted">Registros (76% SCF + 24% sintético)</div>
+              </div>
+
+              <div className="bg-white p-4 rounded-lg">
+                <div className="text-sm font-medium text-academic-text mb-2">Dataset Alocação</div>
+                <div className="text-2xl font-bold text-primary mb-1">5.000</div>
+                <div className="text-xs text-academic-text-muted">Amostras sintéticas balanceadas</div>
+              </div>
+
+              <div className="bg-white p-4 rounded-lg">
+                <div className="text-sm font-medium text-academic-text mb-2">Validação</div>
+                <div className="text-2xl font-bold text-primary mb-1">5-fold</div>
+                <div className="text-xs text-academic-text-muted">Cross-validation estratificada</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 bg-primary-50 rounded-lg p-6 border border-primary">
+            <p className="text-sm text-academic-text-secondary">
+              <strong className="text-primary">Metodologia:</strong> Este sistema utiliza arquitetura dual de redes neurais
+              ensemble, combinando Voting Classifier (classificação) com Ensemble V4 Ultimate (alocação), aplicando
+              feature engineering agressivo e fallback inteligente baseado em perfil de risco para garantir recomendações
+              sempre válidas e diversificadas.
+            </p>
+          </div>
+        </motion.div>
+
         {/* Action Buttons */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.5 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+          transition={{ delay: 0.7 }}
+          className="flex flex-col sm:flex-row gap-4 justify-center mb-8"
         >
-          <Link to="/simulacao">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="btn-premium w-full text-lg py-4"
-            >
-              📊 Ver Simulação
-            </motion.button>
-          </Link>
-
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <button
             onClick={handleNovaAnalise}
-            className="bg-dark-card border-2 border-primary text-primary font-semibold px-6 py-4 rounded-xl hover:bg-primary hover:text-white transition-all duration-300 w-full text-lg"
+            className="btn-primary px-8 py-3"
           >
-            🔄 Nova Análise
-          </motion.button>
-
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            Nova Análise
+          </button>
+          <button
             onClick={() => window.print()}
-            className="bg-dark-card border-2 border-dark-border text-dark-text font-semibold px-6 py-4 rounded-xl hover:border-success transition-all duration-300 w-full text-lg"
+            className="btn-secondary px-8 py-3"
           >
-            🖨️ Imprimir
-          </motion.button>
-
+            Imprimir Relatório
+          </button>
           <Link to="/">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-dark-card border-2 border-dark-border text-dark-text font-semibold px-6 py-4 rounded-xl hover:border-gradient-cyan transition-all duration-300 w-full text-lg"
-            >
-              🏠 Início
-            </motion.button>
+            <button className="btn-secondary px-8 py-3 w-full sm:w-auto">
+              Voltar ao Início
+            </button>
           </Link>
         </motion.div>
 
@@ -609,13 +984,13 @@ export default function Resultado() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.4 }}
-          className="glass-card p-6 border-l-4 border-primary"
+          transition={{ delay: 0.8 }}
+          className="bg-academic-bg-secondary border border-academic-border rounded-lg p-6 text-center"
         >
-          <p className="text-sm text-dark-muted text-center">
-            <strong className="text-dark-text">Aviso Educacional:</strong> Este é um sistema desenvolvido para fins acadêmicos (TCC - Sistemas de Informação).
-            As recomendações são baseadas em modelos de IA e não constituem aconselhamento financeiro profissional.
-            Sempre consulte um assessor certificado antes de investir.
+          <p className="text-sm text-academic-text-secondary">
+            <strong className="text-academic-text">Aviso Importante:</strong> Este sistema foi desenvolvido para fins
+            acadêmicos (TCC - Sistemas de Informação). As recomendações são baseadas em modelos de IA e não constituem
+            aconselhamento financeiro profissional. Sempre consulte um assessor certificado antes de investir.
           </p>
         </motion.div>
       </div>

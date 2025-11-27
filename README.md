@@ -1,6 +1,6 @@
-# 🤖 Investe-AI
+# 🤖 Investe-AI v3.0
 
-> Sistema Inteligente de Recomendação de Carteiras de Investimento usando Redes Neurais Artificiais
+> Sistema Inteligente de Recomendação de Investimentos com Dupla Rede Neural Ensemble
 
 [![Python](https://img.shields.io/badge/Python-3.13-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104-green.svg)](https://fastapi.tiangolo.com/)
@@ -11,64 +11,85 @@
 
 ## 📋 Sobre o Projeto
 
-**Investe-AI** é um sistema de recomendação de investimentos desenvolvido como Trabalho de Conclusão de Curso (TCC) do curso de Sistemas de Informação. O sistema utiliza **duas redes neurais artificiais** trabalhando em conjunto para:
+**Investe-AI** é um sistema de recomendação de investimentos desenvolvido como Trabalho de Conclusão de Curso (TCC) do IFES. O sistema utiliza **arquitetura dual de redes neurais ensemble** trabalhando em conjunto para:
 
-1. **Classificar o perfil de risco** do investidor (Conservador, Moderado ou Agressivo)
-2. **Recomendar alocação personalizada** de portfólio em 6 classes de ativos
+1. **Classificar o perfil de risco** usando Voting Classifier (RF + MLP + SVM)
+2. **Recomendar alocação personalizada** usando Ensemble V4 Ultimate (5 modelos heterogêneos)
 
 ### 🎯 Público-Alvo
 
-Jovens investidores brasileiros (18-45 anos) buscando democratização do acesso a assessoria de investimentos inteligente.
+Jovens investidores brasileiros (18-25 anos) buscando democratização do acesso a assessoria de investimentos inteligente.
 
 ### 🏆 Resultados Alcançados
 
-- ✅ **91% de acurácia** na classificação de perfil de risco
-- ✅ **F1-Score: 83%** com validação cruzada de 90.20% (±2.32%)
-- ✅ **Cohen's Kappa: 0.8026** (concordância substancial)
-- ✅ **R² > 0.85** na recomendação de alocação de portfólio
-- ✅ **< 50ms** tempo de resposta (classificação) e **< 100ms** (alocação)
-- ✅ **1.279 casos** no dataset híbrido validado
+- ✅ **88.2% de acurácia** na classificação de perfil (Voting Classifier)
+- ✅ **100% dos erros** entre classes adjacentes (comportamento seguro)
+- ✅ **R² = 82%** na recomendação de alocação (Ensemble V4 Ultimate)
+- ✅ **+25.82 pp** de melhoria sobre baseline (V1: 56% → V4: 82%)
+- ✅ **< 100ms** tempo de resposta total (classificação + alocação)
+- ✅ **5.000 amostras** sintéticas para treinamento do Portfolio Allocator
 
 ---
 
 ## 🏗️ Arquitetura do Sistema
 
-### Arquitetura Dual de Redes Neurais
+### Arquitetura Dual de Redes Neurais Ensemble
 
 ```
-┌─────────────────────┐
-│   Usuário (10       │
-│   informações)      │
-└──────────┬──────────┘
+┌─────────────────────────────────┐
+│   Usuário (8 features)          │
+│   • idade, renda, patrimônio    │
+│   • experiência, perfil_risco   │
+│   • horizonte, conhecimento     │
+│   • tem_reserva_emergencia      │
+└──────────┬──────────────────────┘
            │
            ▼
 ┌─────────────────────────────────┐
-│  1ª Rede Neural                 │
+│  REDE 1: Voting Classifier      │
 │  (Classificação de Perfil)      │
 │                                 │
-│  • Entrada: 15 features         │
-│  • Arquitetura: MLP (10, 5)     │
-│  • Saída: Perfil + Score (0-1)  │
-│  • Acurácia: 91% | F1: 83%      │
+│  • Random Forest (peso 0.4)     │
+│  • MLP (256,128,64) (peso 0.6)  │
+│  • SVM (arbitrador)             │
+│  • Saída: Perfil + Probabilidade│
+│  • Acurácia: 88.2%              │
 └──────────┬──────────────────────┘
            │
-           ▼
+           ▼ (8 features base)
 ┌─────────────────────────────────┐
-│  2ª Rede Neural                 │
+│  Feature Engineering Agressivo  │
+│  8 → 27 features                │
+│                                 │
+│  • Polinomiais (4)              │
+│  • Logarítmicas (2)             │
+│  • Radiculares (2)              │
+│  • Interações (7)               │
+│  • Compostos (2)                │
+└──────────┬──────────────────────┘
+           │
+           ▼ (27 features)
+┌─────────────────────────────────┐
+│  REDE 2: Ensemble V4 Ultimate   │
 │  (Alocação de Portfólio)        │
 │                                 │
-│  • Entrada: Score + 7 features  │
-│  • Arquitetura: MLP (8-100-50-6)│
+│  • MLP1: (512,256,128,64)       │
+│  • MLP2: (400,200)              │
+│  • Random Forest: 500 árvores   │
+│  • Gradient Boosting: 500 est.  │
+│  • Extra Trees: 500 árvores     │
+│  • Voting com pesos dinâmicos   │
 │  • Saída: 6 alocações %         │
-│  • R²: > 0.85                   │
+│  • R² Score: 82%                │
 └──────────┬──────────────────────┘
            │
            ▼
 ┌─────────────────────────────────┐
-│  Resposta Enriquecida           │
+│  Resposta Completa              │
+│  • Perfil + Probabilidades      │
 │  • Alocação personalizada       │
 │  • Produtos sugeridos           │
-│  • Métricas (Sharpe, retorno)   │
+│  • Métricas (Sharpe, R², risco) │
 │  • Alertas personalizados       │
 └─────────────────────────────────┘
 ```

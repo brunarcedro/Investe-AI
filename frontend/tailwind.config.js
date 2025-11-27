@@ -8,61 +8,72 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Dark Theme Premium Colors (Cinza Escuro Premium)
-        dark: {
-          bg: '#0B0D17',        // Background principal (cinza quase preto premium)
-          card: '#13151F',       // Cards e containers
-          hover: '#1A1D2E',      // Hover states
-          border: '#252836',     // Borders
-          text: '#E5E7EB',       // Texto principal
-          muted: '#9CA3AF',      // Texto secundário
+        // Paleta Minimalista Acadêmica
+        academic: {
+          // Backgrounds
+          bg: '#FFFFFF',
+          'bg-secondary': '#F8F9FA',
+          'bg-tertiary': '#F1F3F5',
+
+          // Texto
+          text: '#1A1A1A',
+          'text-secondary': '#4A5568',
+          'text-muted': '#718096',
+
+          // Borders
+          border: '#E2E8F0',
+          'border-strong': '#CBD5E0',
         },
-        // Accent Colors (Fintech Style)
+
+        // Azul Acadêmico (cor principal)
         primary: {
-          DEFAULT: '#3B82F6',    // Azul moderno
-          light: '#60A5FA',
-          dark: '#2563EB',
+          DEFAULT: '#1E40AF',    // Azul escuro acadêmico
+          light: '#3B82F6',
+          dark: '#1E3A8A',
+          50: '#EFF6FF',
+          100: '#DBEAFE',
         },
+
+        // Cores de suporte
+        accent: {
+          DEFAULT: '#0EA5E9',    // Azul claro para destaques
+          light: '#38BDF8',
+          dark: '#0284C7',
+        },
+
         success: {
-          DEFAULT: '#10B981',    // Verde sofisticado
-          light: '#34D399',
-          dark: '#059669',
+          DEFAULT: '#059669',    // Verde sóbrio
+          light: '#10B981',
+          dark: '#047857',
         },
+
         warning: {
-          DEFAULT: '#F59E0B',    // Laranja elegante
-          light: '#FBBF24',
-          dark: '#D97706',
+          DEFAULT: '#D97706',    // Laranja sóbrio
+          light: '#F59E0B',
+          dark: '#B45309',
         },
+
         danger: {
-          DEFAULT: '#EF4444',    // Vermelho premium
-          light: '#F87171',
-          dark: '#DC2626',
+          DEFAULT: '#DC2626',    // Vermelho sóbrio
+          light: '#EF4444',
+          dark: '#B91C1C',
         },
-        // Premium Gradients
-        gradient: {
-          purple: '#8B5CF6',
-          pink: '#EC4899',
-          cyan: '#06B6D4',
-        },
-        // Gamification Colors
-        bronze: '#CD7F32',
-        silver: '#C0C0C0',
-        gold: '#FFD700',
-        platinum: '#E5E4E2',
       },
       backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-premium': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        'gradient-fintech': 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
-        'gradient-success': 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-        'gradient-glass': 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+        'gradient-primary': 'linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)',
+        'gradient-accent': 'linear-gradient(135deg, #0EA5E9 0%, #38BDF8 100%)',
       },
       boxShadow: {
-        'glow': '0 0 20px rgba(59, 130, 246, 0.5)',
-        'glow-success': '0 0 20px rgba(16, 185, 129, 0.5)',
-        'glow-warning': '0 0 20px rgba(245, 158, 11, 0.5)',
-        'premium': '0 10px 40px rgba(0, 0, 0, 0.3)',
-        'card': '0 4px 20px rgba(0, 0, 0, 0.2)',
+        'sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        'DEFAULT': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+        'md': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        'lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        'xl': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+      },
+      fontFamily: {
+        'sans': ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        'serif': ['Georgia', 'serif'],
+        'mono': ['Fira Code', 'monospace'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in',
