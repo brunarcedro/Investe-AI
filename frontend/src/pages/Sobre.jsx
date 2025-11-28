@@ -203,7 +203,7 @@ export default function Sobre() {
 
               <div className="bg-academic-bg-secondary p-4 rounded-lg border border-academic-border">
                 <p className="text-xs text-academic-text-secondary">
-                  <strong className="text-primary">Ensemble:</strong> Random Forest (peso 0.4) + MLP(256,128,64) (peso 0.6) + SVM (arbitrador)
+                  <strong className="text-primary">Ensemble:</strong> Random Forest (peso 0.4) + MLP(15,10,5) (peso 0.6) + SVM (arbitrador)
                 </p>
               </div>
             </div>

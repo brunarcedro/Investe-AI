@@ -97,7 +97,7 @@ export default function Home() {
               </div>
               <h3 className="subsection-title">Voting Classifier</h3>
               <p className="text-academic-text-secondary text-sm leading-relaxed">
-                Ensemble com RF + MLP(256,128,64) + SVM com soft voting ponderado
+                Ensemble com RF + MLP(15,10,5) + SVM com soft voting ponderado
                 alcançando <strong className="text-primary">88,2% de acurácia</strong>.
               </p>
             </motion.div>

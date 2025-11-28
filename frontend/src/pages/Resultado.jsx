@@ -761,7 +761,7 @@ export default function Resultado() {
                   <span className="font-medium">Peso 0.4</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-academic-text-secondary">MLP (256,128,64)</span>
+                  <span className="text-academic-text-secondary">MLP (15,10,5)</span>
                   <span className="font-medium">Peso 0.6</span>
                 </div>
                 <div className="flex justify-between">
